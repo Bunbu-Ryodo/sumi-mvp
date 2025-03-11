@@ -8,21 +8,10 @@ import {
 } from "react-native";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
+import getEnvVars from "../config";
+const { API_URL } = getEnvVars();
 
 export default function Index() {
-  const [data, setData] = useState(null);
-
-  const testConnection = async () => {
-    try {
-      const response = await fetch("http://localhost:5050/users");
-      const result = await response.json();
-      console.log(result);
-      setData(result);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.logoBook}>
@@ -47,7 +36,6 @@ export default function Index() {
             <Text style={styles.secondaryButtonText}>Register</Text>
           </TouchableOpacity>
         </Link>
-        <Button title="Test Connection" onPress={() => testConnection()} />
       </View>
     </View>
   );
