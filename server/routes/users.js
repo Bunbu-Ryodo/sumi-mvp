@@ -3,10 +3,13 @@ import db from "../db/connection.js";
 import { ObjectId } from "mongodb";
 const router = express.Router();
 
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
 router.get("/", async (req, res) => {
-    let collection = await db.collection("users");
-    let results = await collection.find({}).toArray();
-    res.send(results).status(200);
+    const allUsers = await prisma.users.findMany();
+    res.send(allUsers).status(200);
 });
 
 export default router;
