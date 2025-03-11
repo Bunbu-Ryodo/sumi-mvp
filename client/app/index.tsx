@@ -5,13 +5,42 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Link } from "expo-router";
-import { useEffect, useState } from "react";
 import getEnvVars from "../config";
 const { API_URL } = getEnvVars();
+import { useEffect, useState } from "react";
 
 export default function Index() {
+  const [data, setData] = useState(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSignIn = async () => {
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to sign in");
+      }
+
+      const result = await response.json();
+      console.log(result);
+      // Handle successful sign-in (e.g., navigate to another screen, store token, etc.)
+      Alert.alert("Success", "Signed in successfully");
+    } catch (error) {
+      console.error("Error signing in:", error);
+      Alert.alert("Error", "Failed to sign in");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.logoBook}>
@@ -23,14 +52,17 @@ export default function Index() {
       </View>
       <View style={styles.form}>
         <Text style={styles.formLabel}>Email</Text>
-        <TextInput style={styles.formInput}></TextInput>
+        <TextInput style={styles.formInput} onChangeText={setEmail}></TextInput>
         <Text style={styles.formLabel}>Password</Text>
-        <TextInput secureTextEntry={true} style={styles.formInput}></TextInput>
-        <Link href="../feed" asChild>
-          <TouchableOpacity style={styles.buttonPrimary} onPress={() => {}}>
-            <Text style={styles.primaryButtonText}>Sign In</Text>
-          </TouchableOpacity>
-        </Link>
+        <TextInput
+          secureTextEntry={true}
+          style={styles.formInput}
+          onChangeText={setPassword}
+        ></TextInput>
+
+        <TouchableOpacity style={styles.buttonPrimary} onPress={handleSignIn}>
+          <Text style={styles.primaryButtonText}>Sign In</Text>
+        </TouchableOpacity>
         <Link href="../register" asChild>
           <TouchableOpacity style={styles.buttonSecondary} onPress={() => {}}>
             <Text style={styles.secondaryButtonText}>Register</Text>
