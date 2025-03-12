@@ -14,6 +14,19 @@ const JWT_SECRET = process.env.JWT_SECRET;
 router.post("/register", async (req, res) => {
   const { email, password, confirmPassword, readerTag } = req.body;
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  if(!validateEmail(email)){
+    return res.status(400).json({error: "Invalid email"});
+  }
+
+  if(!email.length || !password.length || !confirmPassword.length || !readerTag.length){
+    return res.status(400).json({error: "Please complete any missing fields"});
+  }
+
   if (password !== confirmPassword) {
     return res.status(400).json({error: "Passwords do not match"});
   }
@@ -39,11 +52,12 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
+  if(!email.length || !password.length){
+    return res.status(400).json({error: "Please complete any missing fields"});
+  }
+
   // Find the user by email
   const user = await prisma.users.findUnique({ where: { email } });
-  console.log(user, "User");
-  const allUsers = await prisma.users.findMany();
-  console.log(allUsers);
 
 
   if (!user) {

@@ -17,9 +17,30 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [registerError, setRegisterError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const router = useRouter();
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleEmailChange = (email: string) => {
+    setEmail(email);
+    if (!validateEmail(email)) {
+      setEmailError("Invalid email address");
+    } else {
+      setEmailError("");
+    }
+  };
+
   const register = async () => {
+    setReaderTag(readerTag.trim());
+    setEmail(email.trim());
+    setPassword(password.trim());
+    setConfirmPassword(confirmPassword.trim());
+
     try {
       const response = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
@@ -30,6 +51,8 @@ export default function Register() {
       });
       const result = await response.json();
       if (result.error) setRegisterError(result.error);
+      if (result.error == "Passwords do not match")
+        setPasswordError(result.error);
 
       if (!response.ok) {
         throw new Error(result.error || "Failed to register");
@@ -56,18 +79,22 @@ export default function Register() {
           onChangeText={setReaderTag}
         ></TextInput>
         <Text style={styles.formLabel}>Email</Text>
-        <TextInput style={styles.formInput} onChangeText={setEmail}></TextInput>
+        <TextInput
+          style={[styles.formInput, emailError ? styles.errorInput : null]}
+          keyboardType="email-address"
+          onChangeText={handleEmailChange}
+        ></TextInput>
         <Text style={styles.formLabel}>Create Password</Text>
         <TextInput
           secureTextEntry={true}
           onChangeText={setPassword}
-          style={styles.formInput}
+          style={[styles.formInput, passwordError ? styles.errorInput : null]}
         ></TextInput>
         <Text style={styles.formLabel}>Confirm Password</Text>
         <TextInput
           secureTextEntry={true}
           onChangeText={setConfirmPassword}
-          style={styles.formInput}
+          style={[styles.formInput, passwordError ? styles.errorInput : null]}
         ></TextInput>
         <TouchableOpacity style={styles.buttonPrimary} onPress={register}>
           <Text style={styles.primaryButtonText}>Register</Text>
@@ -184,5 +211,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "QuicksandReg",
     alignSelf: "center",
+  },
+  errorInput: {
+    borderColor: "#FE7F2D",
   },
 });

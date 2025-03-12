@@ -17,6 +17,10 @@ export default function Index() {
   const [signinError, setSigninError] = useState("");
 
   const handleSignIn = async () => {
+    setEmail(email.trim());
+    setPassword(password.trim());
+    setSigninError(signinError.trim());
+
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
