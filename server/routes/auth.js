@@ -14,6 +14,10 @@ const JWT_SECRET = process.env.JWT_SECRET;
 router.post("/register", async (req, res) => {
   const { email, password, confirmPassword, readerTag } = req.body;
 
+  if(!email || !password || !!confirmPassword || !readerTag){
+    return res.status(400).json({error: "Please complete any missing fields"});
+  }
+
   if (password !== confirmPassword) {
     return res.status(400).json({error: "Passwords do not match"});
   }
