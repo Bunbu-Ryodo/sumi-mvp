@@ -14,6 +14,15 @@ const JWT_SECRET = process.env.JWT_SECRET;
 router.post("/register", async (req, res) => {
   const { email, password, confirmPassword, readerTag } = req.body;
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  if(!validateEmail(email)){
+    return res.status(400).json({error: "Invalid email"});
+  }
+
   if(!email.length || !password.length || !confirmPassword.length || !readerTag.length){
     return res.status(400).json({error: "Please complete any missing fields"});
   }
