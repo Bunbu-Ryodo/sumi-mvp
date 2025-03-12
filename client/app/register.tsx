@@ -20,6 +20,11 @@ export default function Register() {
   const router = useRouter();
 
   const register = async () => {
+    setReaderTag(readerTag.trim());
+    setEmail(email.trim());
+    setPassword(password.trim());
+    setConfirmPassword(confirmPassword.trim());
+
     try {
       const response = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
