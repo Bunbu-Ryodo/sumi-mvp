@@ -4,16 +4,17 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Alert,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import getEnvVars from "../config";
 const { API_URL } = getEnvVars();
 import { useEffect, useState } from "react";
+const router = useRouter();
 
 export default function Index() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [signinError, setSigninError] = useState("");
 
   const handleSignIn = async () => {
     try {
@@ -25,17 +26,19 @@ export default function Index() {
         body: JSON.stringify({ email, password }),
       });
 
+      const result = await response.json();
+
+      if (result.error) setSigninError(result.error);
+
       if (!response.ok) {
         throw new Error("Failed to sign in");
       }
+      router.push("/feed");
 
-      const result = await response.json();
       console.log(result);
       // Handle successful sign-in (e.g., navigate to another screen, store token, etc.)
-      Alert.alert("Success", "Signed in successfully");
     } catch (error) {
-      console.error("Error signing in:", error);
-      Alert.alert("Error", "Failed to sign in");
+      console.error("Error:", error);
     }
   };
 
@@ -66,6 +69,9 @@ export default function Index() {
             <Text style={styles.secondaryButtonText}>Register</Text>
           </TouchableOpacity>
         </Link>
+        {signinError ? (
+          <Text style={styles.errorText}>{signinError}</Text>
+        ) : null}
       </View>
     </View>
   );
@@ -163,5 +169,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     fontFamily: "QuicksandReg",
     width: "100%",
+  },
+  errorText: {
+    color: "#FE7F2D",
+    marginTop: 12,
+    fontSize: 16,
+    fontFamily: "QuicksandReg",
+    alignSelf: "center",
   },
 });

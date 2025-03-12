@@ -47,20 +47,20 @@ router.post("/login", async (req, res) => {
 
 
   if (!user) {
-    return res.status(400).send({error: "Invalid email or password"});
+    return res.status(400).json({error: "Invalid email or password"});
   }
 
   // Compare the password
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
 
-    return res.status(400).send({error: "Invalid email or password"});
+    return res.status(400).json({error: "Invalid email or password"});
   }
 
   // Generate a JWT token
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1h" });
 
-  res.send({ token });
+  res.json({ token });
 });
 
 
