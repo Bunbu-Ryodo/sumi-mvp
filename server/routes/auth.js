@@ -14,7 +14,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 router.post("/register", async (req, res) => {
   const { email, password, confirmPassword, readerTag } = req.body;
 
-  if(!email || !password || !!confirmPassword || !readerTag){
+  if(!email.length || !password.length || !!confirmPassword.length || !readerTag.length){
     return res.status(400).json({error: "Please complete any missing fields"});
   }
 
@@ -43,11 +43,12 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
+  if(!email.length || !password.length){
+    return res.status(400).json({error: "Please complete any missing fields"});
+  }
+
   // Find the user by email
   const user = await prisma.users.findUnique({ where: { email } });
-  console.log(user, "User");
-  const allUsers = await prisma.users.findMany();
-  console.log(allUsers);
 
 
   if (!user) {
