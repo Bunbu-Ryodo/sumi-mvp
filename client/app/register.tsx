@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import getEnvVars from "../config";
 const { API_URL } = getEnvVars();
@@ -15,6 +15,9 @@ export default function Register() {
   const [readerTag, setReaderTag] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [registerError, setRegisterError] = useState("");
+  const router = useRouter();
 
   const register = async () => {
     try {
@@ -23,20 +26,17 @@ export default function Register() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ readerTag, email, password }),
+        body: JSON.stringify({ readerTag, email, confirmPassword, password }),
       });
+      const result = await response.json();
+      if (result.error) setRegisterError(result.error);
 
       if (!response.ok) {
-        throw new Error("Failed to register");
+        throw new Error(result.error || "Failed to register");
       }
-
-      const result = await response.json();
-      console.log(result);
-      // Handle successful sign-in (e.g., navigate to another screen, store token, etc.)
-      Alert.alert("Success", "Successfully registered");
-    } catch (error) {
-      console.error("Error:", error);
-      Alert.alert("Error", "Failed to register");
+      router.push("/feed");
+    } catch (error: any) {
+      console.log("Error:", error);
     }
   };
 
@@ -64,8 +64,11 @@ export default function Register() {
           style={styles.formInput}
         ></TextInput>
         <Text style={styles.formLabel}>Confirm Password</Text>
-        <TextInput secureTextEntry={true} style={styles.formInput}></TextInput>
-
+        <TextInput
+          secureTextEntry={true}
+          onChangeText={setConfirmPassword}
+          style={styles.formInput}
+        ></TextInput>
         <TouchableOpacity style={styles.buttonPrimary} onPress={register}>
           <Text style={styles.primaryButtonText}>Register</Text>
         </TouchableOpacity>
@@ -74,6 +77,9 @@ export default function Register() {
             <Text style={styles.secondaryButtonText}>Back to Sign In</Text>
           </TouchableOpacity>
         </Link>
+        {registerError ? (
+          <Text style={styles.errorText}>{registerError}</Text>
+        ) : null}
       </View>
     </View>
   );
@@ -171,5 +177,12 @@ const styles = StyleSheet.create({
     color: "#F6F7EB",
     fontFamily: "QuicksandReg",
     fontSize: 16,
+  },
+  errorText: {
+    color: "#FE7F2D",
+    marginTop: 12,
+    fontSize: 16,
+    fontFamily: "QuicksandReg",
+    alignSelf: "center",
   },
 });
