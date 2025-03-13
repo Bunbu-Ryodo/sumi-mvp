@@ -13,3 +13,26 @@ model users {
   password  String
   readerTag String
 }
+
+model text {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  title    String
+  author   String
+  year     String
+  extracts extract[]
+}
+
+model extract {
+  id           String @id @default(auto()) @map("_id") @db.ObjectId
+  text         text   @relation(fields: [textId], references: [id])
+  textId       String @db.ObjectId
+  author       String
+  title        String
+  year         String
+  chapter      Int
+  previewText  String
+  fullText     String
+  portrait     String
+  coverArt     String
+  subscribeArt String
+}
