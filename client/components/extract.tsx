@@ -9,8 +9,8 @@ type ExtractProps = {
   chapter: string;
   year: string;
   text: string;
-  portrait: any;
-  thumbnail: any;
+  portrait?: any;
+  thumbnail?: any;
 };
 
 export default function Extract({
@@ -37,18 +37,20 @@ export default function Extract({
       <View style={styles.previewText}>
         <Text style={styles.text}>{text}</Text>
       </View>
-      <View style={styles.thumbnail}></View>
+      <View style={styles.thumbnail}>
+        <Image source={thumbnail} style={styles.thumbnail} />
+      </View>
       <View style={styles.engagementButtons}>
-        <TouchableOpacity>
+        <TouchableOpacity style={styles.icon}>
           <Ionicons name="heart-outline" size={24} color="#D64045" />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity style={styles.icon}>
           <Ionicons name="bookmark-outline" size={24} color="#FE7F2D" />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity style={styles.icon}>
           <Ionicons name="chatbubble-outline" size={24} color="#77966D" />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity style={styles.icon}>
           <Ionicons name="share-social-outline" size={24} color="#8980F5" />
         </TouchableOpacity>
       </View>
@@ -68,7 +70,6 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: "center", // Center horizontally
     justifyContent: "center", // Center vertically
-    cursor: "pointer",
     borderWidth: 1,
     borderColor: "#393E41",
   },
@@ -78,6 +79,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 8,
     height: 250,
+    cursor: "pointer",
   },
   previewText: {
     marginTop: 12,
@@ -87,10 +89,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     height: 100,
     width: 100,
+    cursor: "pointer",
   },
   text: {
     fontFamily: "Merriweather",
     fontSize: 16,
+    cursor: "pointer",
   },
   header: {
     flexDirection: "row",
@@ -103,6 +107,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     padding: 8,
+    cursor: "pointer",
   },
   headerText: {
     marginLeft: 12,
@@ -128,6 +133,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "flex-start",
+  },
+  icon: {
+    cursor: "pointer",
   },
   subscribe: {
     flexDirection: "row",
