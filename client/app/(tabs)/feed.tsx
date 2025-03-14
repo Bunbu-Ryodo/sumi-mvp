@@ -4,6 +4,7 @@ import getEnvVars from "../../config.js";
 const { API_URL } = getEnvVars();
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
 type Extract = {
   id: string;
@@ -21,6 +22,7 @@ type Extract = {
 
 export default function FeedScreen() {
   const [extracts, setExtracts] = useState<Extract[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,12 +37,18 @@ export default function FeedScreen() {
         });
 
         if (!response.ok) {
-          throw new Error("Failed to fetch extracts");
+          const errorData = await response.json();
+          if (errorData.error === "Invalid token.") {
+            await AsyncStorage.removeItem("token");
+            router.push("/"); // Redirect to login screen
+          }
+          throw new Error(errorData.error || "Failed to fetch extracts");
         }
 
         const result = await response.json();
         setExtracts(result);
       } catch (error) {
+        console.log(error);
         console.error("Error:", error);
       }
     };
