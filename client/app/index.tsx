@@ -10,6 +10,7 @@ import getEnvVars from "../config";
 const { API_URL } = getEnvVars();
 import { useEffect, useState } from "react";
 const router = useRouter();
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Index() {
   const [email, setEmail] = useState("");
@@ -37,10 +38,10 @@ export default function Index() {
       if (!response.ok) {
         throw new Error("Failed to sign in");
       }
-      router.push("/feed");
 
-      console.log(result);
-      // Handle successful sign-in (e.g., navigate to another screen, store token, etc.)
+      await AsyncStorage.setItem("token", result.token);
+
+      router.push("/feed");
     } catch (error) {
       console.error("Error:", error);
     }

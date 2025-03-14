@@ -3,12 +3,12 @@ import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 type ExtractProps = {
-  id: number;
+  id: string;
   title: string;
   author: string;
-  chapter: string;
+  chapter: number;
   year: string;
-  text: string;
+  previewText: string;
   portrait?: any;
   thumbnail?: any;
 };
@@ -19,7 +19,7 @@ export default function Extract({
   author,
   chapter,
   year,
-  text,
+  previewText,
   portrait,
   thumbnail,
 }: ExtractProps) {
@@ -29,13 +29,13 @@ export default function Extract({
         <Image source={portrait} style={styles.portrait}></Image>
         <View style={styles.headerContainer}>
           <Text style={styles.headerTextTitle}>{title}</Text>
-          <Text style={styles.headerText}>{chapter}</Text>
+          <Text style={styles.headerText}>Chapter {chapter}</Text>
           <Text style={styles.headerText}>{author}</Text>
-          <Text style={styles.headerText}>{year}</Text>
+          <Text style={styles.headerText}>({year})</Text>
         </View>
       </View>
       <View style={styles.previewText}>
-        <Text style={styles.text}>{text}</Text>
+        <Text style={styles.text}>{previewText}</Text>
       </View>
       <View style={styles.thumbnail}>
         <Image source={thumbnail} style={styles.thumbnail} />

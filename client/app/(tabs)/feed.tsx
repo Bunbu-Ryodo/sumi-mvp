@@ -1,20 +1,71 @@
 import { StyleSheet, ScrollView } from "react-native";
 import Extract from "../../components/extract";
+import getEnvVars from "../../config.js";
+const { API_URL } = getEnvVars();
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+type Extract = {
+  id: string;
+  textId: string;
+  author: string;
+  title: string;
+  year: string;
+  chapter: number;
+  previewText: string;
+  fullText: string;
+  coverArt: string;
+  subscribeArt: string;
+  portrait: string;
+};
 
 export default function FeedScreen() {
+  const [extracts, setExtracts] = useState<Extract[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const response = await fetch(`${API_URL}/api/feed`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch extracts");
+        }
+
+        const result = await response.json();
+        setExtracts(result);
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <ScrollView
       contentContainerStyle={styles.contentContainer}
       style={styles.container}
     >
-      <Extract
-        id={1}
-        title={"Kim"}
-        author={"Rudyard Kipling"}
-        chapter={"Chapter 1"}
-        year={"1901"}
-        text={`He sat, in defiance of municipal orders, astride the gun Zam Zammah on her brick platform opposite the old Ajaib-Gher—the Wonder House, as the natives call the Lahore Museum. Who hold Zam-Zammah, that “fire-breathing dragon”, hold the Punjab, for the great green-bronze piece is always first of the conqueror’s loot. There was some justification for Kim—he had kicked Lala Dinanath’s boy off the trunnions—since the English held the Punjab and Kim was English...`}
-      ></Extract>
+      {extracts &&
+        extracts.map((extract: Extract, index: number) => (
+          <Extract
+            key={index}
+            id={extract.id}
+            author={extract.author}
+            title={extract.title}
+            year={extract.year}
+            chapter={extract.chapter}
+            previewText={extract.previewText}
+            portrait={extract.portrait}
+            thumbnail={extract.coverArt}
+          />
+        ))}
     </ScrollView>
   );
 }
