@@ -10,6 +10,7 @@ import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import getEnvVars from "../config";
 const { API_URL } = getEnvVars();
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Register() {
   const [readerTag, setReaderTag] = useState("");
@@ -57,6 +58,9 @@ export default function Register() {
       if (!response.ok) {
         throw new Error(result.error || "Failed to register");
       }
+
+      await AsyncStorage.setItem("token", result.token);
+
       router.push("/feed");
     } catch (error: any) {
       console.log("Error:", error);

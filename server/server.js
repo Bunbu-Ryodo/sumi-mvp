@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import usersRouter from "./routes/users.js";
 import authRouter from "./routes/auth.js";
+import protectedRouter from "./routes/protectedRoutes.js";
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -13,6 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/users", usersRouter);
 app.use("/auth", authRouter);
+app.use("/api", protectedRouter);
 
 app.listen(PORT, () => {
     console.log(`Server listening  on port ${PORT}`);
