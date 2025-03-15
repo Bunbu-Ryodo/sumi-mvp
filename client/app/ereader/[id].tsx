@@ -22,6 +22,7 @@ type ExtractProps = {
   chapter: number;
   year: string;
   previewText: string;
+  fullText: string;
   portrait?: any;
   thumbnail?: any;
 };
@@ -37,6 +38,7 @@ export default function EReader() {
     chapter: 0,
     year: "",
     previewText: "",
+    fullText: "",
     portrait: null,
     thumbnail: null,
   });
@@ -79,12 +81,11 @@ export default function EReader() {
       <ScrollView style={styles.paper}>
         <View>
           <View style={styles.titleBar}>
-            <Text style={styles.title}></Text>
-            <Text style={styles.chapter}></Text>
+            <Text style={styles.title}>{extract.title}</Text>
+            <Text style={styles.chapter}>{extract.chapter}</Text>
           </View>
-          <Text style={styles.extractText}></Text>
+          <Text style={styles.extractText}>{extract.fullText}</Text>
         </View>
-        <Text>Your book is in another castle</Text>
         <View style={styles.engagementButtons}>
           <TouchableOpacity>
             <Ionicons name="heart-outline" size={24} color="#D64045" />
