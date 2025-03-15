@@ -59,7 +59,10 @@ export default function Register() {
         throw new Error(result.error || "Failed to register");
       }
 
+      console.log(result, "RESULT");
       await AsyncStorage.setItem("token", result.token);
+      await AsyncStorage.setItem("userId", result.userId);
+      await AsyncStorage.setItem("readerTag", result.readerTag);
 
       router.push("/feed");
     } catch (error: any) {

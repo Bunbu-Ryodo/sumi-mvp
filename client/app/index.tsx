@@ -39,7 +39,10 @@ export default function Index() {
         throw new Error("Failed to sign in");
       }
 
+      console.log(result, "RESULT");
       await AsyncStorage.setItem("token", result.token);
+      await AsyncStorage.setItem("userId", result.userId);
+      await AsyncStorage.setItem("readerTag", result.readerTag);
 
       router.push("/feed");
     } catch (error) {

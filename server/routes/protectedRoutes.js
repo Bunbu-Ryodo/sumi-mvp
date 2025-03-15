@@ -47,4 +47,55 @@ router.get("/ereader", authMiddleware, async (req, res) => {
   }
 })
 
+router.post("/comment", authMiddleware, async(req, res) => {
+  const { userId, message, extractId, time, readerTag } = req.body;
+
+  try {
+    const newComment = await prisma.comment.create({
+      data: {
+        userId,
+        extractId,
+        message,
+        time,
+        readerTag
+      }
+    })
+
+    if(!newComment){
+      return res.status(404).json({error: "Error posting comment"})
+    }
+
+    res.status(200).json(newComment);
+  } catch(error){
+    console.error("Error posting comment:", error);
+    res.status(500).json({error: "Internal server error"})
+  }
+})
+
+router.get("/comment", authMiddleware, async(req, res) => {
+  const { extractId } = req.query
+
+  if(!extractId){
+    return res.status(400).json(({error: "Missing Extract ID"}))
+  }
+
+  try {
+    const comments = await prisma.comment.findMany({
+      where: {
+        extractId: extractId
+      }
+    })
+
+    if (!comments) {
+      return res.status(404).json({ error: "Comments" });
+    }
+
+    res.status(200).json(comments);
+
+  } catch(error) {
+    console.error("Error fetching comments:", error);
+    res.status(500).json({error: "Internal server error"})
+  }
+})
+
 export default router;

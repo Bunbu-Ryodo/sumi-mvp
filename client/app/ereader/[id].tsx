@@ -14,6 +14,7 @@ import getEnvVars from "../../config.js";
 const { API_URL } = getEnvVars();
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import Comment from "../../components/comment";
 
 type ExtractProps = {
   id: string;
@@ -43,8 +44,19 @@ export default function EReader() {
     thumbnail: null,
   });
 
+  type CommentType = {
+    id: string;
+    extractId: string;
+    message: string;
+    readerTag: string;
+    userId: string;
+    time: string;
+  };
+
   const [like, setLike] = useState(false);
   const [subscribe, setSubscribe] = useState(false);
+  const [message, setMessage] = useState("");
+  const [comments, setComments] = useState<CommentType[]>([]);
 
   function toggleLike() {
     setLike(!like);
@@ -55,6 +67,64 @@ export default function EReader() {
   }
 
   const router = useRouter();
+
+  const getComments = async () => {
+    const token = await AsyncStorage.getItem("token");
+
+    try {
+      const response = await fetch(`${API_URL}/api/comment?extractId=${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Failed to load comments");
+      }
+
+      console.log(result);
+    } catch (error) {
+      console.log(error, "Error");
+      console.error("Error:", error);
+    }
+  };
+
+  const postComment = async () => {
+    const userId = await AsyncStorage.getItem("userId");
+    const token = await AsyncStorage.getItem("token");
+    const readerTag = await AsyncStorage.getItem("readerTag");
+
+    try {
+      const response = await fetch(`${API_URL}/api/comment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: userId,
+          message: message,
+          extractId: id,
+          time: new Date(), // Get the current date and time in milliseconds
+          readerTag: readerTag,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Failed to post comment");
+      }
+
+      console.log(result);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,6 +149,7 @@ export default function EReader() {
 
         const result = await response.json();
         setExtract(result);
+        await getComments();
       } catch (error) {
         console.log(error);
         console.error("Error:", error);
@@ -144,10 +215,23 @@ export default function EReader() {
           numberOfLines={8}
           maxLength={490}
           style={styles.addCommentTextarea}
+          onChangeText={setMessage}
         />
-        <TouchableOpacity style={styles.submitCommentButton} onPress={() => {}}>
+        <TouchableOpacity
+          style={styles.submitCommentButton}
+          onPress={postComment}
+        >
           <Text style={styles.submitCommentText}>Comment</Text>
         </TouchableOpacity>
+        {comments &&
+          comments.map((comment: CommentType, index: number) => (
+            <Comment
+              key={index}
+              message={comment.message}
+              readerTag={comment.readerTag}
+              time={comment.time}
+            />
+          ))}
       </ScrollView>
     </ScrollView>
   );
