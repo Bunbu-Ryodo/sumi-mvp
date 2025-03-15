@@ -26,20 +26,60 @@ export default function Extract({
   return (
     <View style={styles.extract}>
       <View style={styles.header}>
-        <Image source={portrait} style={styles.portrait}></Image>
-        <View style={styles.headerContainer}>
-          <Text style={styles.headerTextTitle}>{title}</Text>
-          <Text style={styles.headerText}>Chapter {chapter}</Text>
-          <Text style={styles.headerText}>{author}</Text>
-          <Text style={styles.headerText}>({year})</Text>
+        <Link
+          href={{
+            pathname: "/ereader/[id]",
+            params: {
+              id: id,
+            },
+          }}
+          asChild
+        >
+          <Image source={portrait} style={styles.portrait}></Image>
+        </Link>
+        <Link
+          href={{
+            pathname: "/ereader/[id]",
+            params: {
+              id: id,
+            },
+          }}
+          asChild
+        >
+          <View style={styles.headerContainer}>
+            <Text style={styles.headerTextTitle}>{title}</Text>
+            <Text style={styles.headerText}>Chapter {chapter}</Text>
+            <Text style={styles.headerText}>{author}</Text>
+            <Text style={styles.headerText}>({year})</Text>
+          </View>
+        </Link>
+      </View>
+      <Link
+        href={{
+          pathname: "/ereader/[id]",
+          params: {
+            id: id,
+          },
+        }}
+        asChild
+      >
+        <View style={styles.previewText}>
+          <Text style={styles.text}>{previewText}</Text>
         </View>
-      </View>
-      <View style={styles.previewText}>
-        <Text style={styles.text}>{previewText}</Text>
-      </View>
-      <View style={styles.thumbnail}>
-        <Image source={thumbnail} style={styles.thumbnail} />
-      </View>
+      </Link>
+      <Link
+        href={{
+          pathname: "/ereader/[id]",
+          params: {
+            id: id,
+          },
+        }}
+        asChild
+      >
+        <View style={styles.thumbnail}>
+          <Image source={thumbnail} style={styles.thumbnail} />
+        </View>
+      </Link>
       <View style={styles.engagementButtons}>
         <TouchableOpacity style={styles.icon}>
           <Ionicons name="heart-outline" size={24} color="#D64045" />
