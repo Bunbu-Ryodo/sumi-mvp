@@ -1,6 +1,7 @@
 import { Text, View, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useState } from "react";
 
 type ExtractProps = {
   id: string;
@@ -23,6 +24,17 @@ export default function Extract({
   portrait,
   thumbnail,
 }: ExtractProps) {
+  const [like, setLike] = useState(false);
+  const [subscribe, setSubscribe] = useState(false);
+
+  function toggleLike() {
+    setLike(!like);
+  }
+
+  function toggleSubscribe() {
+    setSubscribe(!subscribe);
+  }
+
   return (
     <View style={styles.extract}>
       <View style={styles.header}>
@@ -81,11 +93,19 @@ export default function Extract({
         </View>
       </Link>
       <View style={styles.engagementButtons}>
-        <TouchableOpacity style={styles.icon}>
-          <Ionicons name="heart-outline" size={24} color="#D64045" />
+        <TouchableOpacity style={styles.icon} onPress={toggleLike}>
+          <Ionicons
+            name={like ? "heart" : "heart-outline"}
+            size={24}
+            color="#D64045"
+          />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.icon}>
-          <Ionicons name="bookmark-outline" size={24} color="#FE7F2D" />
+        <TouchableOpacity style={styles.icon} onPress={toggleSubscribe}>
+          <Ionicons
+            name={subscribe ? "bookmark" : "bookmark-outline"}
+            size={24}
+            color="#FE7F2D"
+          />
         </TouchableOpacity>
         <TouchableOpacity style={styles.icon}>
           <Ionicons name="chatbubble-outline" size={24} color="#77966D" />

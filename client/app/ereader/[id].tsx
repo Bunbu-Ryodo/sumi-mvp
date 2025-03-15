@@ -43,6 +43,17 @@ export default function EReader() {
     thumbnail: null,
   });
 
+  const [like, setLike] = useState(false);
+  const [subscribe, setSubscribe] = useState(false);
+
+  function toggleLike() {
+    setLike(!like);
+  }
+
+  function toggleSubscribe() {
+    setSubscribe(!subscribe);
+  }
+
   const router = useRouter();
 
   useEffect(() => {
@@ -87,12 +98,20 @@ export default function EReader() {
           <Text style={styles.extractText}>{extract.fullText}</Text>
         </View>
         <View style={styles.engagementButtons}>
-          <TouchableOpacity>
-            <Ionicons name="heart-outline" size={24} color="#D64045" />
+          <TouchableOpacity onPress={toggleLike}>
+            <Ionicons
+              name={like ? "heart" : "heart-outline"}
+              size={24}
+              color="#D64045"
+            />
           </TouchableOpacity>
           <View style={styles.subscribeContainer}>
-            <TouchableOpacity>
-              <Ionicons name="bookmark-outline" size={24} color="#FE7F2D" />
+            <TouchableOpacity onPress={toggleSubscribe}>
+              <Ionicons
+                name={subscribe ? "bookmark" : "bookmark-outline"}
+                size={24}
+                color="#FE7F2D"
+              />
             </TouchableOpacity>
             <Text style={styles.bookmarkText}>
               Subscribe: new chapter next week
