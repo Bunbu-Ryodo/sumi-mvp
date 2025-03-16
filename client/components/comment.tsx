@@ -6,6 +6,8 @@ import getEnvVars from "../config";
 import { useRouter } from "expo-router";
 const { API_URL } = getEnvVars();
 
+const router = useRouter();
+
 type CommentType = {
   id: string;
   userId: string;
@@ -22,6 +24,8 @@ export default function Comment({
   time,
 }: CommentType) {
   const [userSession, setUserSession] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(true);
+
   const formatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "full",
     timeStyle: "full",
@@ -52,10 +56,14 @@ export default function Comment({
       if (!response.ok) {
         throw new Error("Failed to delete comment");
       }
-      console.log(response);
+      setIsVisible(false);
     } catch (error) {
       console.error("Error:", error);
     }
+  }
+
+  if (!isVisible) {
+    return null;
   }
 
   return (

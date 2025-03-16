@@ -57,6 +57,7 @@ export default function EReader() {
   const [subscribe, setSubscribe] = useState(false);
   const [message, setMessage] = useState("");
   const [comments, setComments] = useState<CommentType[]>([]);
+  const [refresh, setRefresh] = useState(false);
 
   function toggleLike() {
     setLike(!like);
@@ -87,9 +88,7 @@ export default function EReader() {
       }
 
       if (result) setComments(result);
-      console.log(comments);
     } catch (error) {
-      console.log(error, "Error");
       console.error("Error:", error);
     }
   };
@@ -115,13 +114,13 @@ export default function EReader() {
         }),
       });
 
-      const result = await response.json();
+      await response.json();
 
       if (!response.ok) {
         throw new Error("Failed to post comment");
       }
 
-      console.log(result);
+      setRefresh(!refresh);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -152,12 +151,11 @@ export default function EReader() {
         setExtract(result);
         await getComments();
       } catch (error) {
-        console.log(error);
         console.error("Error:", error);
       }
     };
     fetchData();
-  }, []);
+  }, [refresh]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -225,16 +223,19 @@ export default function EReader() {
           <Text style={styles.submitCommentText}>Comment</Text>
         </TouchableOpacity>
         {comments &&
-          comments.map((comment: CommentType, index: number) => (
-            <Comment
-              id={comment.id}
-              userId={comment.userId}
-              key={index}
-              message={comment.message}
-              readerTag={comment.readerTag}
-              time={comment.time}
-            />
-          ))}
+          comments
+            .slice()
+            .reverse()
+            .map((comment: CommentType, index: number) => (
+              <Comment
+                id={comment.id}
+                userId={comment.userId}
+                key={index}
+                message={comment.message}
+                readerTag={comment.readerTag}
+                time={comment.time}
+              />
+            ))}
       </ScrollView>
     </ScrollView>
   );
