@@ -98,4 +98,27 @@ router.get("/comment", authMiddleware, async(req, res) => {
   }
 })
 
+router.post("/deletecomment", authMiddleware, async(req, res) => {
+  const { id, userId } = req.body;
+
+  if(!id || !userId){
+    return res.status(400).json({error: "Missing data"});
+  }
+
+  try {
+    const comment = await prisma.comment.delete({
+      where: { id: id, userId: userId }
+    })
+
+    if (!comment) {
+      return res.status(404).json({ error: "Comments" });
+    }
+
+    res.status(200).json(comment);
+  } catch(error){
+     console.error("Error deleting comment:", error);
+     res.status(500).json({error: "Internal server error"});
+  }
+})
+
 export default router;

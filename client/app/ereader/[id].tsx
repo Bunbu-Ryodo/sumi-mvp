@@ -86,7 +86,8 @@ export default function EReader() {
         throw new Error("Failed to load comments");
       }
 
-      console.log(result);
+      if (result) setComments(result);
+      console.log(comments);
     } catch (error) {
       console.log(error, "Error");
       console.error("Error:", error);
@@ -226,6 +227,8 @@ export default function EReader() {
         {comments &&
           comments.map((comment: CommentType, index: number) => (
             <Comment
+              id={comment.id}
+              userId={comment.userId}
               key={index}
               message={comment.message}
               readerTag={comment.readerTag}
