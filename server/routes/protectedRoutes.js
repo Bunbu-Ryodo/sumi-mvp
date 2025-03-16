@@ -121,4 +121,23 @@ router.post("/deletecomment", authMiddleware, async(req, res) => {
   }
 })
 
+router.post("/editcomment", authMiddleware, async(req, res) => {
+  const {id, userId, message } = req.body;
+
+  if(!id || !userId || !message) {
+    return res.status(400).json({error: "Missing data"});
+  }
+
+  try {
+    const newComment = await prisma.comment.update({
+      where: {id: id, userId: userId }, data: { message: message }
+    })
+
+    res.status(200).json(comment);
+  } catch(error) {
+    console.error("Error updating comment:", error);
+    res.status(500).json({error: "Internal server error"});
+  }
+})
+
 export default router;

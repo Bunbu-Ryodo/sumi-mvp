@@ -1,12 +1,15 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useState } from "react";
 import getEnvVars from "../config";
-import { useRouter } from "expo-router";
 const { API_URL } = getEnvVars();
-
-const router = useRouter();
 
 type CommentType = {
   id: string;
@@ -25,6 +28,8 @@ export default function Comment({
 }: CommentType) {
   const [userSession, setUserSession] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [comment, setComment] = useState(message);
 
   const formatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "full",
@@ -34,8 +39,6 @@ export default function Comment({
   useEffect(() => {
     async function getUserSession() {
       const session = await AsyncStorage.getItem("userId");
-      console.log(userId, "User id in component");
-      console.log(session, "User id in async storage");
       setUserSession(session);
     }
 
@@ -62,6 +65,15 @@ export default function Comment({
     }
   }
 
+  function toggleEditing() {
+    setEditing(!editing);
+  }
+
+  function editComment(cmnt: string) {
+    setComment(cmnt);
+    console.log(comment);
+  }
+
   if (!isVisible) {
     return null;
   }
@@ -70,11 +82,34 @@ export default function Comment({
     <View style={styles.container}>
       <Text style={styles.time}>{formatter.format(new Date(time))}</Text>
       <Text style={styles.readerTag}>{readerTag} says: </Text>
-      <Text style={styles.message}>{message}</Text>
+
+      {editing ? (
+        <View>
+          <TextInput
+            editable
+            multiline
+            numberOfLines={8}
+            maxLength={490}
+            style={styles.addCommentTextarea}
+            onChangeText={editComment}
+            defaultValue={message}
+          />
+          <TouchableOpacity style={styles.submitCommentButton}>
+            <Text style={styles.submitCommentText}>Comment</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <Text style={styles.message}>{message}</Text>
+      )}
       {userSession === userId && (
-        <TouchableOpacity style={styles.icon} onPress={deleteComment}>
-          <Ionicons name="trash" size={24} color="#D64045" />
-        </TouchableOpacity>
+        <View style={styles.commentIcons}>
+          <TouchableOpacity style={styles.icon} onPress={deleteComment}>
+            <Ionicons name="trash" size={24} color="#D64045" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.icon} onPress={toggleEditing}>
+            <Ionicons name="pencil" size={24} color="#393E41" />
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -82,7 +117,7 @@ export default function Comment({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
+    padding: 7,
     borderBottomWidth: 1,
     borderStyle: "dotted",
     borderColor: "#393E41",
@@ -101,5 +136,30 @@ const styles = StyleSheet.create({
   },
   icon: {
     cursor: "pointer",
+  },
+  addCommentTextarea: {
+    borderWidth: 1,
+    borderColor: "#393E41",
+    padding: 8,
+    borderRadius: 8,
+    fontFamily: "QuicksandReg",
+    marginTop: 8,
+  },
+  submitCommentButton: {
+    marginTop: 8,
+    paddingVertical: 16,
+    backgroundColor: "#393E41",
+    borderRadius: 8, // Same borderRadius as form inputs
+    alignItems: "center",
+    width: "100%", // Take 100% of the container width
+  },
+  submitCommentText: {
+    color: "#F6F7EB",
+    fontFamily: "QuicksandReg",
+    fontSize: 16,
+  },
+  commentIcons: {
+    marginTop: 8,
+    flexDirection: "row",
   },
 });
