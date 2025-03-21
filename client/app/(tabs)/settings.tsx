@@ -6,12 +6,45 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState, useEffect } from "react";
+import getEnvVars from "../../config";
+const { API_URL } = getEnvVars();
 
 export default function Settings() {
   const router = useRouter();
+  const [readerTag, setReaderTag] = useState("");
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    const getUser = async () => {
+      const token = await AsyncStorage.getItem("token");
+      const userId = await AsyncStorage.getItem("userId");
+
+      try {
+        const response = await fetch(`${API_URL}/api/users?userId=${userId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to get user");
+        }
+
+        const user = await response.json();
+        setEmail(user.email);
+        setReaderTag(user.readerTag);
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+    getUser();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -25,10 +58,13 @@ export default function Settings() {
   return (
     <View style={styles.container}>
       <View style={styles.form}>
-        {/* <Text style={styles.formLabel}>Change ReaderTag</Text>
-        <TextInput style={styles.formInput}></TextInput>
+        <Text style={styles.formLabel}>Change ReaderTag</Text>
+        <TextInput
+          defaultValue={readerTag}
+          style={styles.formInput}
+        ></TextInput>
         <Text style={styles.formLabel}>Change Email</Text>
-        <TextInput style={styles.formInput}></TextInput>
+        <TextInput defaultValue={email} style={styles.formInput}></TextInput>
         <Text style={styles.formLabel}>Change Password</Text>
         <TextInput secureTextEntry={true} style={styles.formInput}></TextInput>
         <Text style={styles.formLabel}>Confirm New Password</Text>
@@ -37,7 +73,7 @@ export default function Settings() {
           <TouchableOpacity style={styles.buttonPrimary} onPress={() => {}}>
             <Text style={styles.primaryButtonText}>Save</Text>
           </TouchableOpacity>
-        </Link> */}
+        </Link>
         <TouchableOpacity style={styles.buttonLogout} onPress={handleLogout}>
           <Text style={styles.primaryButtonText}>Logout</Text>
         </TouchableOpacity>
@@ -116,6 +152,7 @@ const styles = StyleSheet.create({
     borderRadius: 8, // Same borderRadius as form inputs
     alignItems: "center",
     width: "100%", // Take 100% of the container width
+    marginBottom: 16,
   },
   buttonLogout: {
     paddingVertical: 16,

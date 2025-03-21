@@ -5,6 +5,23 @@ import authMiddleware from "../middleware/auth.js"
 const router = express.Router();
 const prisma = new PrismaClient();
 
+
+router.get("/users", authMiddleware, async (req, res) => {
+  const { userId } = req.query;
+  try {
+    const foundUser = await prisma.users.findUnique({
+      where: {
+        id: userId
+      }
+    })
+
+    res.status(200).json(foundUser)
+  } catch(error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({error: "Internal server error"})
+  }
+})
+
 router.get("/feed", authMiddleware, async (req, res) => {
     try {
       const chapter1Extracts = await prisma.extract.findMany({
