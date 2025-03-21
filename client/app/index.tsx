@@ -40,6 +40,8 @@ export default function Index() {
       }
 
       await AsyncStorage.setItem("token", result.token);
+      await AsyncStorage.setItem("userId", result.userId);
+      await AsyncStorage.setItem("readerTag", result.readerTag);
 
       router.push("/feed");
     } catch (error) {

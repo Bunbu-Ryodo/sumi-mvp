@@ -1,6 +1,7 @@
 import { Text, View, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useState } from "react";
 
 type ExtractProps = {
   id: string;
@@ -23,29 +24,88 @@ export default function Extract({
   portrait,
   thumbnail,
 }: ExtractProps) {
+  const [like, setLike] = useState(false);
+  const [subscribe, setSubscribe] = useState(false);
+
+  function toggleLike() {
+    setLike(!like);
+  }
+
+  function toggleSubscribe() {
+    setSubscribe(!subscribe);
+  }
+
   return (
     <View style={styles.extract}>
       <View style={styles.header}>
-        <Image source={portrait} style={styles.portrait}></Image>
-        <View style={styles.headerContainer}>
-          <Text style={styles.headerTextTitle}>{title}</Text>
-          <Text style={styles.headerText}>Chapter {chapter}</Text>
-          <Text style={styles.headerText}>{author}</Text>
-          <Text style={styles.headerText}>({year})</Text>
+        <Link
+          href={{
+            pathname: "/ereader/[id]",
+            params: {
+              id: id,
+            },
+          }}
+          asChild
+        >
+          <Image source={portrait} style={styles.portrait}></Image>
+        </Link>
+        <Link
+          href={{
+            pathname: "/ereader/[id]",
+            params: {
+              id: id,
+            },
+          }}
+          asChild
+        >
+          <View style={styles.headerContainer}>
+            <Text style={styles.headerTextTitle}>{title}</Text>
+            <Text style={styles.headerText}>Chapter {chapter}</Text>
+            <Text style={styles.headerText}>{author}</Text>
+            <Text style={styles.headerText}>({year})</Text>
+          </View>
+        </Link>
+      </View>
+      <Link
+        href={{
+          pathname: "/ereader/[id]",
+          params: {
+            id: id,
+          },
+        }}
+        asChild
+      >
+        <View style={styles.previewText}>
+          <Text style={styles.text}>{previewText}</Text>
         </View>
-      </View>
-      <View style={styles.previewText}>
-        <Text style={styles.text}>{previewText}</Text>
-      </View>
-      <View style={styles.thumbnail}>
-        <Image source={thumbnail} style={styles.thumbnail} />
-      </View>
+      </Link>
+      <Link
+        href={{
+          pathname: "/ereader/[id]",
+          params: {
+            id: id,
+          },
+        }}
+        asChild
+      >
+        <View style={styles.thumbnail}>
+          <Image source={thumbnail} style={styles.thumbnail} />
+        </View>
+      </Link>
       <View style={styles.engagementButtons}>
-        <TouchableOpacity style={styles.icon}>
-          <Ionicons name="heart-outline" size={24} color="#D64045" />
+        <TouchableOpacity style={styles.icon} onPress={toggleLike}>
+          <Ionicons
+            name={like ? "heart" : "heart-outline"}
+            size={24}
+            color="#D64045"
+          />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.icon}>
-          <Ionicons name="bookmark-outline" size={24} color="#FE7F2D" />
+        <TouchableOpacity style={styles.icon} onPress={toggleSubscribe}>
+          <Ionicons
+            name={subscribe ? "bookmark" : "bookmark-outline"}
+            size={24}
+            color="#FE7F2D"
+          />
         </TouchableOpacity>
         <TouchableOpacity style={styles.icon}>
           <Ionicons name="chatbubble-outline" size={24} color="#77966D" />

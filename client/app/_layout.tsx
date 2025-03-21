@@ -30,6 +30,10 @@ export default function RootLayout() {
         name="register"
         options={{ headerShown: false }}
       ></Stack.Screen>
+      <Stack.Screen
+        name="ereader/[id]"
+        options={{ headerShown: false }}
+      ></Stack.Screen>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
     </Stack>
