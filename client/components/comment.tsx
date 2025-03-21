@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import getEnvVars from "../config";
 const { API_URL } = getEnvVars();
 
@@ -17,6 +17,7 @@ type CommentType = {
   message: string;
   readerTag: string;
   time: string;
+  likes: number;
 };
 
 export default function Comment({
@@ -25,11 +26,14 @@ export default function Comment({
   message,
   readerTag,
   time,
+  likes,
 }: CommentType) {
   const [userSession, setUserSession] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(true);
   const [editing, setEditing] = useState(false);
   const [comment, setComment] = useState(message);
+  const [like, setLike] = useState(false);
+  const isInitialMount = useRef(true);
 
   const formatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "full",
@@ -44,6 +48,18 @@ export default function Comment({
 
     getUserSession();
   }, []);
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    } else {
+      if (like) {
+        likeComment();
+      } else {
+        undoLikeComment();
+      }
+    }
+  }, [like]);
 
   async function deleteComment() {
     const token = await AsyncStorage.getItem("token");
@@ -73,6 +89,10 @@ export default function Comment({
     setComment(cmnt);
   }
 
+  async function toggleLike() {
+    await setLike((prevLike) => !prevLike);
+  }
+
   async function updateComment() {
     const token = await AsyncStorage.getItem("token");
     const userId = await AsyncStorage.getItem("userId");
@@ -88,6 +108,40 @@ export default function Comment({
       });
       setComment(comment);
       setEditing(false);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
+  async function likeComment() {
+    const token = await AsyncStorage.getItem("token");
+
+    try {
+      await fetch(`${API_URL}/api/likecomment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id }),
+      });
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
+  async function undoLikeComment() {
+    const token = await AsyncStorage.getItem("token");
+
+    try {
+      await fetch(`${API_URL}/api/undolikecomment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id }),
+      });
     } catch (error) {
       console.error("Error:", error);
     }
@@ -111,7 +165,7 @@ export default function Comment({
             maxLength={490}
             style={styles.addCommentTextarea}
             onChangeText={editComment}
-            defaultValue={message}
+            value={comment} // Changed from defaultValue to value
           />
           <TouchableOpacity
             style={styles.submitCommentButton}
@@ -123,8 +177,16 @@ export default function Comment({
       ) : (
         <Text style={styles.message}>{comment ? comment : message}</Text>
       )}
+      {likes > 0 && <Text style={styles.likesCount}>+{likes}</Text>}
       {userSession === userId && (
         <View style={styles.commentIcons}>
+          <TouchableOpacity style={styles.icon} onPress={toggleLike}>
+            <Ionicons
+              name={like ? "thumbs-up" : "thumbs-up-outline"}
+              size={24}
+              color="#77966D"
+            />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.icon} onPress={deleteComment}>
             <Ionicons name="trash" size={24} color="#D64045" />
           </TouchableOpacity>
@@ -158,6 +220,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     cursor: "pointer",
+    marginRight: 16,
   },
   addCommentTextarea: {
     borderWidth: 1,
@@ -183,5 +246,12 @@ const styles = StyleSheet.create({
   commentIcons: {
     marginTop: 8,
     flexDirection: "row",
+  },
+  messageContainer: {
+    flexDirection: "row",
+  },
+  likesCount: {
+    fontFamily: "QuicksandReg",
+    color: "#77966D",
   },
 });

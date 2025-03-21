@@ -51,13 +51,13 @@ export default function EReader() {
     readerTag: string;
     userId: string;
     time: string;
+    likes: number;
   };
 
   const [like, setLike] = useState(false);
   const [subscribe, setSubscribe] = useState(false);
   const [message, setMessage] = useState("");
   const [comments, setComments] = useState<CommentType[]>([]);
-  const [refresh, setRefresh] = useState(false);
 
   function toggleLike() {
     setLike(!like);
@@ -114,13 +114,14 @@ export default function EReader() {
         }),
       });
 
-      await response.json();
+      const newComment = await response.json();
 
       if (!response.ok) {
         throw new Error("Failed to post comment");
       }
 
-      setRefresh(!refresh);
+      setComments((prevComments) => [newComment, ...prevComments]);
+      setMessage(""); // Clear the input field
     } catch (error) {
       console.error("Error:", error);
     }
@@ -155,7 +156,7 @@ export default function EReader() {
       }
     };
     fetchData();
-  }, [refresh]);
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -234,6 +235,7 @@ export default function EReader() {
                 message={comment.message}
                 readerTag={comment.readerTag}
                 time={comment.time}
+                likes={comment.likes}
               />
             ))}
       </ScrollView>

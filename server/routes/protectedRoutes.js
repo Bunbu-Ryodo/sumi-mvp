@@ -150,4 +150,64 @@ router.post("/editcomment", authMiddleware, async(req, res) => {
   }
 })
 
+router.post("/likecomment", authMiddleware, async(req, res) => {
+  const { id } = req.body;
+
+  if(!id){
+    return res.status(400).json({error: "Missing data"});
+  }
+
+  try {
+    const likedComment = await prisma.comment.update({
+      where: {
+        id: id,
+      },
+      data: {
+        likes: {
+          increment: 1
+        }
+      }
+    })
+
+    if(!likedComment){
+      return res.status(500).json({error: "Something went wrong with liking the comment"});
+    }
+
+    res.status(200).json(likedComment);
+  } catch(error) {
+    console.error("Error liking comment:", error);
+    res.status(500).json({error: "Internal server error"});
+  }
+})
+
+router.post("/undolikecomment", authMiddleware, async(req, res) => {
+  const { id } = req.body;
+
+  if(!id){
+    return res.status(400).json({error: "Missing data"});
+  }
+
+  try {
+    const likedComment = await prisma.comment.update({
+      where: {
+        id: id,
+      },
+      data: {
+        likes: {
+          decrement: 1
+        }
+      }
+    })
+
+    if(!likedComment){
+      return res.status(500).json({error: "Something went wrong with liking the comment"});
+    }
+
+    res.status(200).json(likedComment);
+  } catch(error) {
+    console.error("Error liking comment:", error);
+    res.status(500).json({error: "Internal server error"});
+  }
+})
+
 export default router;

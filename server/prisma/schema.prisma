@@ -48,4 +48,5 @@ model comment {
   time      DateTime
   message   String
   readerTag String
+  likes     Int      @default(0)
 }
