@@ -71,7 +71,26 @@ export default function Comment({
 
   function editComment(cmnt: string) {
     setComment(cmnt);
-    console.log(comment);
+  }
+
+  async function updateComment() {
+    const token = await AsyncStorage.getItem("token");
+    const userId = await AsyncStorage.getItem("userId");
+
+    try {
+      await fetch(`${API_URL}/api/editcomment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId, comment, id }),
+      });
+      setComment(comment);
+      setEditing(false);
+    } catch (error) {
+      console.error("Error:", error);
+    }
   }
 
   if (!isVisible) {
@@ -94,12 +113,15 @@ export default function Comment({
             onChangeText={editComment}
             defaultValue={message}
           />
-          <TouchableOpacity style={styles.submitCommentButton}>
+          <TouchableOpacity
+            style={styles.submitCommentButton}
+            onPress={updateComment}
+          >
             <Text style={styles.submitCommentText}>Comment</Text>
           </TouchableOpacity>
         </View>
       ) : (
-        <Text style={styles.message}>{message}</Text>
+        <Text style={styles.message}>{comment ? comment : message}</Text>
       )}
       {userSession === userId && (
         <View style={styles.commentIcons}>
