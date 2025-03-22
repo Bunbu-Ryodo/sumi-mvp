@@ -6,12 +6,54 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState, useEffect } from "react";
+import getEnvVars from "../../config";
+const { API_URL } = getEnvVars();
 
 export default function Settings() {
   const router = useRouter();
+  const [readerTag, setReaderTag] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPasswordForEmailChange] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [emailChangeError, setEmailChangeError] = useState("");
+  const [passwordChangeError, setPasswordChangeError] = useState("");
+  const [readerTagChangeSuccess, setReaderTagChangeSuccess] = useState("");
+  const [emailChangeSuccess, setEmailChangeSuccess] = useState("");
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState("");
+
+  useEffect(() => {
+    const getUser = async () => {
+      const token = await AsyncStorage.getItem("token");
+      const userId = await AsyncStorage.getItem("userId");
+
+      try {
+        const response = await fetch(`${API_URL}/api/users?userId=${userId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to get user");
+        }
+
+        const user = await response.json();
+        setEmail(user.email);
+        setReaderTag(user.readerTag);
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+    getUser();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -22,22 +64,194 @@ export default function Settings() {
     }
   };
 
+  const updateReaderTag = async () => {
+    const token = await AsyncStorage.getItem("token");
+    const userId = await AsyncStorage.getItem("userId");
+
+    try {
+      const response = await fetch(`${API_URL}/api/editreadertag`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId, readerTag }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        setReaderTagChangeSuccess("");
+        throw new Error(result.error || "Failed to update readerTag");
+      }
+
+      setReaderTagChangeSuccess("ReaderTag Successfully Changed");
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  };
+
+  const updateEmail = async () => {
+    const token = await AsyncStorage.getItem("token");
+    const userId = await AsyncStorage.getItem("userId");
+
+    try {
+      const response = await fetch(`${API_URL}/api/editemail`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId, email, password }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setEmailChangeSuccess("");
+        setEmailChangeError(result.error || "Failed to update email");
+        return;
+      } else {
+        setEmailChangeSuccess("Email Successfully Changed");
+        setEmailChangeError("");
+      }
+    } catch (error) {
+      console.log("Error:", error);
+      setEmailChangeSuccess("");
+      setEmailChangeError("Internal server error");
+    }
+  };
+
+  const changePassword = async () => {
+    const token = await AsyncStorage.getItem("token");
+    const userId = await AsyncStorage.getItem("userId");
+
+    try {
+      const response = await fetch(`${API_URL}/api/changepassword`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId,
+          oldPassword,
+          newPassword,
+          confirmNewPassword,
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        setPasswordChangeSuccess("");
+        setPasswordChangeError(result.error || "Failed to update password");
+        return;
+      } else {
+        setPasswordChangeSuccess("Password Successfully Changed");
+        setPasswordChangeError("");
+      }
+    } catch (error) {
+      console.log("Error:", error);
+      setPasswordChangeError("Internal server error");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.form}>
-        {/* <Text style={styles.formLabel}>Change ReaderTag</Text>
-        <TextInput style={styles.formInput}></TextInput>
+        <Text style={styles.formLabel}>Change ReaderTag</Text>
+        <TextInput
+          defaultValue={readerTag}
+          style={[
+            styles.formInput,
+            readerTagChangeSuccess ? styles.successInput : null,
+          ]}
+        ></TextInput>
+        <TouchableOpacity
+          style={styles.changeLoginButton}
+          onPress={updateReaderTag}
+        >
+          <Text style={styles.primaryButtonText}>Change ReaderTag</Text>
+        </TouchableOpacity>
+        {readerTagChangeSuccess ? (
+          <Text style={styles.successText}>{readerTagChangeSuccess}</Text>
+        ) : null}
         <Text style={styles.formLabel}>Change Email</Text>
-        <TextInput style={styles.formInput}></TextInput>
+        <TextInput
+          defaultValue={email}
+          style={[
+            styles.formInput,
+            emailChangeSuccess ? styles.successInput : null,
+          ]}
+        ></TextInput>
+        <Text style={styles.formLabel}>Enter Current Password</Text>
+        <TextInput
+          secureTextEntry={true}
+          style={[
+            styles.formInput,
+            emailChangeError ? styles.errorInput : null,
+          ]}
+          onChangeText={setPasswordForEmailChange}
+        ></TextInput>
+        <TouchableOpacity
+          style={styles.changeLoginButton}
+          onPress={updateEmail}
+        >
+          <Text style={styles.primaryButtonText}>Change Email</Text>
+        </TouchableOpacity>
+        {emailChangeError ? (
+          <Text style={styles.errorText}>{emailChangeError}</Text>
+        ) : emailChangeSuccess ? (
+          <Text style={styles.successText}>{emailChangeSuccess}</Text>
+        ) : null}
+        <Text style={styles.formLabel}>Enter Current Password</Text>
+        <TextInput
+          secureTextEntry={true}
+          style={[
+            styles.formInput,
+            passwordChangeError
+              ? styles.errorInput
+              : passwordChangeSuccess
+              ? styles.successInput
+              : null,
+          ]}
+          onChangeText={setOldPassword}
+        ></TextInput>
         <Text style={styles.formLabel}>Change Password</Text>
-        <TextInput secureTextEntry={true} style={styles.formInput}></TextInput>
+        <TextInput
+          secureTextEntry={true}
+          style={[
+            styles.formInput,
+            passwordChangeError
+              ? styles.errorInput
+              : passwordChangeSuccess
+              ? styles.successInput
+              : null,
+          ]}
+          onChangeText={setNewPassword}
+        ></TextInput>
         <Text style={styles.formLabel}>Confirm New Password</Text>
-        <TextInput secureTextEntry={true} style={styles.formInput}></TextInput>
-        <Link style={styles.buttonContainer} href="/feed" asChild>
-          <TouchableOpacity style={styles.buttonPrimary} onPress={() => {}}>
-            <Text style={styles.primaryButtonText}>Save</Text>
-          </TouchableOpacity>
-        </Link> */}
+        <TextInput
+          secureTextEntry={true}
+          style={[
+            styles.formInput,
+            passwordChangeError
+              ? styles.errorInput
+              : passwordChangeSuccess
+              ? styles.successInput
+              : null,
+          ]}
+          onChangeText={setConfirmNewPassword}
+        ></TextInput>
+        <TouchableOpacity style={styles.buttonPrimary} onPress={changePassword}>
+          <Text style={styles.primaryButtonText}>Change Password</Text>
+        </TouchableOpacity>
+        {passwordChangeError ? (
+          <Text style={styles.errorPasswordText}>{passwordChangeError}</Text>
+        ) : passwordChangeSuccess ? (
+          <Text style={styles.successPasswordText}>
+            {passwordChangeSuccess}
+          </Text>
+        ) : null}
         <TouchableOpacity style={styles.buttonLogout} onPress={handleLogout}>
           <Text style={styles.primaryButtonText}>Logout</Text>
         </TouchableOpacity>
@@ -116,6 +330,17 @@ const styles = StyleSheet.create({
     borderRadius: 8, // Same borderRadius as form inputs
     alignItems: "center",
     width: "100%", // Take 100% of the container width
+    marginBottom: 16,
+    marginTop: 16,
+  },
+  changeLoginButton: {
+    paddingVertical: 16,
+    backgroundColor: "#F6F7EB",
+    borderRadius: 8, // Same borderRadius as form inputs
+    alignItems: "center",
+    width: "100%", // Take 100% of the container width
+    marginBottom: 12,
+    marginTop: 16,
   },
   buttonLogout: {
     paddingVertical: 16,
@@ -143,5 +368,37 @@ const styles = StyleSheet.create({
     color: "#F6F7EB",
     fontFamily: "QuicksandReg",
     fontSize: 16,
+  },
+  errorText: {
+    color: "#FE7F2D",
+    fontSize: 16,
+    fontFamily: "QuicksandReg",
+    alignSelf: "center",
+  },
+  errorPasswordText: {
+    color: "#FE7F2D",
+    fontSize: 16,
+    fontFamily: "QuicksandReg",
+    alignSelf: "center",
+    marginBottom: 12,
+  },
+  errorInput: {
+    borderColor: "#FE7F2D",
+  },
+  successInput: {
+    borderColor: "#77966D",
+  },
+  successText: {
+    color: "#77966D",
+    fontSize: 16,
+    fontFamily: "QuicksandReg",
+    alignSelf: "center",
+  },
+  successPasswordText: {
+    color: "#77966D",
+    fontSize: 16,
+    fontFamily: "QuicksandReg",
+    alignSelf: "center",
+    marginBottom: 12,
   },
 });
