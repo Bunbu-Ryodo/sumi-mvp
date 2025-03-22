@@ -23,6 +23,9 @@ export default function Settings() {
   const [oldPassword, setOldPassword] = useState("");
   const [emailChangeError, setEmailChangeError] = useState("");
   const [passwordChangeError, setPasswordChangeError] = useState("");
+  const [readerTagChangeSuccess, setReaderTagChangeSuccess] = useState("");
+  const [emailChangeSuccess, setEmailChangeSuccess] = useState("");
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState("");
 
   useEffect(() => {
     const getUser = async () => {
@@ -77,8 +80,11 @@ export default function Settings() {
 
       const result = await response.json();
       if (!response.ok) {
+        setReaderTagChangeSuccess("");
         throw new Error(result.error || "Failed to update readerTag");
       }
+
+      setReaderTagChangeSuccess("ReaderTag Successfully Changed");
     } catch (error) {
       console.log("Error:", error);
     }
@@ -101,13 +107,16 @@ export default function Settings() {
       const result = await response.json();
 
       if (!response.ok) {
+        setEmailChangeSuccess("");
         setEmailChangeError(result.error || "Failed to update email");
         return;
       } else {
+        setEmailChangeSuccess("Email Successfully Changed");
         setEmailChangeError("");
       }
     } catch (error) {
       console.log("Error:", error);
+      setEmailChangeSuccess("");
       setEmailChangeError("Internal server error");
     }
   };
@@ -133,9 +142,11 @@ export default function Settings() {
 
       const result = await response.json();
       if (!response.ok) {
+        setPasswordChangeSuccess("");
         setPasswordChangeError(result.error || "Failed to update password");
         return;
       } else {
+        setPasswordChangeSuccess("Password Successfully Changed");
         setPasswordChangeError("");
       }
     } catch (error) {
@@ -150,7 +161,10 @@ export default function Settings() {
         <Text style={styles.formLabel}>Change ReaderTag</Text>
         <TextInput
           defaultValue={readerTag}
-          style={styles.formInput}
+          style={[
+            styles.formInput,
+            readerTagChangeSuccess ? styles.successInput : null,
+          ]}
         ></TextInput>
         <TouchableOpacity
           style={styles.changeLoginButton}
@@ -158,8 +172,17 @@ export default function Settings() {
         >
           <Text style={styles.primaryButtonText}>Change ReaderTag</Text>
         </TouchableOpacity>
+        {readerTagChangeSuccess ? (
+          <Text style={styles.successText}>{readerTagChangeSuccess}</Text>
+        ) : null}
         <Text style={styles.formLabel}>Change Email</Text>
-        <TextInput defaultValue={email} style={styles.formInput}></TextInput>
+        <TextInput
+          defaultValue={email}
+          style={[
+            styles.formInput,
+            emailChangeSuccess ? styles.successInput : null,
+          ]}
+        ></TextInput>
         <Text style={styles.formLabel}>Enter Current Password</Text>
         <TextInput
           secureTextEntry={true}
@@ -177,13 +200,19 @@ export default function Settings() {
         </TouchableOpacity>
         {emailChangeError ? (
           <Text style={styles.errorText}>{emailChangeError}</Text>
+        ) : emailChangeSuccess ? (
+          <Text style={styles.successText}>{emailChangeSuccess}</Text>
         ) : null}
         <Text style={styles.formLabel}>Enter Current Password</Text>
         <TextInput
           secureTextEntry={true}
           style={[
             styles.formInput,
-            passwordChangeError ? styles.errorInput : null,
+            passwordChangeError
+              ? styles.errorInput
+              : passwordChangeSuccess
+              ? styles.successInput
+              : null,
           ]}
           onChangeText={setOldPassword}
         ></TextInput>
@@ -192,7 +221,11 @@ export default function Settings() {
           secureTextEntry={true}
           style={[
             styles.formInput,
-            passwordChangeError ? styles.errorInput : null,
+            passwordChangeError
+              ? styles.errorInput
+              : passwordChangeSuccess
+              ? styles.successInput
+              : null,
           ]}
           onChangeText={setNewPassword}
         ></TextInput>
@@ -201,7 +234,11 @@ export default function Settings() {
           secureTextEntry={true}
           style={[
             styles.formInput,
-            passwordChangeError ? styles.errorInput : null,
+            passwordChangeError
+              ? styles.errorInput
+              : passwordChangeSuccess
+              ? styles.successInput
+              : null,
           ]}
           onChangeText={setConfirmNewPassword}
         ></TextInput>
@@ -210,6 +247,10 @@ export default function Settings() {
         </TouchableOpacity>
         {passwordChangeError ? (
           <Text style={styles.errorPasswordText}>{passwordChangeError}</Text>
+        ) : passwordChangeSuccess ? (
+          <Text style={styles.successPasswordText}>
+            {passwordChangeSuccess}
+          </Text>
         ) : null}
         <TouchableOpacity style={styles.buttonLogout} onPress={handleLogout}>
           <Text style={styles.primaryButtonText}>Logout</Text>
@@ -343,5 +384,21 @@ const styles = StyleSheet.create({
   },
   errorInput: {
     borderColor: "#FE7F2D",
+  },
+  successInput: {
+    borderColor: "#77966D",
+  },
+  successText: {
+    color: "#77966D",
+    fontSize: 16,
+    fontFamily: "QuicksandReg",
+    alignSelf: "center",
+  },
+  successPasswordText: {
+    color: "#77966D",
+    fontSize: 16,
+    fontFamily: "QuicksandReg",
+    alignSelf: "center",
+    marginBottom: 12,
   },
 });
