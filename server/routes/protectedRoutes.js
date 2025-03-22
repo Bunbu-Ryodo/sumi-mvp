@@ -1,6 +1,7 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import authMiddleware from "../middleware/auth.js"
+import bcrypt from "bcryptjs";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -19,6 +20,95 @@ router.get("/users", authMiddleware, async (req, res) => {
   } catch(error) {
     console.error("Error fetching user:", error);
     res.status(500).json({error: "Internal server error"})
+  }
+})
+
+router.post("/editreadertag", authMiddleware, async (req, res) => {
+  const { userId, readerTag } = req.body;
+
+  try {
+    const editUser = await prisma.users.update({
+      where: {
+        id: userId
+      },
+      data: {
+        readerTag: readerTag
+      }
+    })
+
+    res.status(200).json(editUser);
+  } catch(error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({error: "Internal server error"});
+  }
+})
+
+router.post("/editemail", authMiddleware, async (req, res) => {
+  const { userId, email, password } = req.body;
+
+  try {
+    const user = await prisma.users.findUnique({
+      where: {
+        id: userId
+      }
+    })
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if(!isMatch){
+      return res.status(400).json({error: "Invalid password"});
+    }
+
+    const changedEmailUser = await prisma.users.update({
+      where: {
+        id: userId
+      },
+      data: {
+        email: email
+      }
+    })
+
+    res.status(200).json(changedEmailUser);
+  } catch(error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({error: "Internal server error"});
+  }
+})
+
+router.post("/changepassword", authMiddleware, async(req, res) => {
+  const { userId, oldPassword, newPassword, confirmNewPassword } = req.body;
+
+  try {
+    const user = await prisma.users.findUnique({
+      where: {
+        id: userId
+      }
+    })
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+    if(!isMatch){
+      return res.status(400).json({error: "Invalid password"});
+    }
+
+    if(newPassword !== confirmNewPassword){
+      return res.status(400).json({error: "Passwords don't match"});
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    const changedPasswordUser = await prisma.users.update({
+      where: {
+        id: userId
+      },
+      data: {
+        password: hashedNewPassword
+      }
+    })
+
+    res.status(200).json(changedPasswordUser)
+  } catch(error) {
+    res.status(500).json({error: "Internal server error"});
   }
 })
 
