@@ -333,8 +333,6 @@ router.post("/createsubscription", authMiddleware, async(req, res) => {
       }
     })
 
-    console.log(existingSubscription, "EXISTING SUBSCRIPTION");
-
     if(existingSubscription.length){
       return res.status(400).json({error: "You're already subscribed"})
     }
@@ -382,7 +380,31 @@ router.post("/deletesubscription", authMiddleware, async(req, res) => {
     console.error("Error creating subscription:", error);
     res.status(500).json({error: "Internal server error"});
   }
+})
 
+router.get("/getsubscriptions", authMiddleware, async(req, res) => {
+  const { userId } = req.query;
+
+  if(!userId){
+    return res.status(400).json({error: "Missing user id"});
+  }
+
+  try {
+    const subscriptions = await prisma.subscription.findMany({
+      where: {
+        userId: userId
+      }
+    })
+
+    if(!subscriptions){
+      return res.status(500).json({error: "Something went wrong with getting the subsriptions"})
+    }
+
+    return res.status(200).json(subscriptions)
+  } catch(error){
+    console.log("Error:", error);
+    return res.status(500).json({error: "Internal server error"});
+  }
 })
 
 export default router;
