@@ -26,6 +26,7 @@ type ExtractProps = {
   fullText: string;
   portrait?: any;
   thumbnail?: any;
+  textId: string;
 };
 
 export default function EReader() {
@@ -42,6 +43,7 @@ export default function EReader() {
     fullText: "",
     portrait: null,
     thumbnail: null,
+    textId: "",
   });
 
   type CommentType = {
@@ -63,8 +65,79 @@ export default function EReader() {
     setLike(!like);
   }
 
-  function toggleSubscribe() {
-    setSubscribe(!subscribe);
+  async function toggleSubscribe() {
+    await setSubscribe((prevState) => {
+      const subscribed = !prevState;
+
+      if (subscribed) {
+        subscribeToSeries();
+      } else if (!subscribed) {
+        unsubscribeFromSeries();
+      }
+
+      return subscribed;
+    });
+  }
+
+  async function subscribeToSeries() {
+    const token = await AsyncStorage.getItem("token");
+    const userId = await AsyncStorage.getItem("userId");
+
+    try {
+      const response = await fetch(`${API_URL}/api/createsubscription`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: userId,
+          textId: extract.textId,
+          chapter: extract.chapter + 1,
+          due: new Date(new Date().getTime() + 5 * 60000),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Failed to subscribe");
+      }
+
+      console.log(result);
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  }
+
+  async function unsubscribeFromSeries() {
+    const token = await AsyncStorage.getItem("token");
+    const userId = await AsyncStorage.getItem("userId");
+
+    try {
+      const response = await fetch(`${API_URL}/api/deletesubscription`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: userId,
+          textId: extract.textId,
+          chapter: extract.chapter + 1,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Failed to delete subscription");
+      }
+
+      console.log(result);
+    } catch (error) {
+      console.log("Error:", error);
+    }
   }
 
   const router = useRouter();

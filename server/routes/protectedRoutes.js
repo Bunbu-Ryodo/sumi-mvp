@@ -317,4 +317,72 @@ router.post("/undolikecomment", authMiddleware, async(req, res) => {
   }
 })
 
+router.post("/createsubscription", authMiddleware, async(req, res) => {
+  const { userId, textId, chapter, due } = req.body;
+
+  if(!userId || !textId || !chapter || !due){
+    return res.status(400).json({error: "Missing data"});
+  }
+
+  try {
+    const existingSubscription = await prisma.subscription.findMany({
+      where: {
+        userId: userId,
+        textId: textId,
+        chapter: chapter
+      }
+    })
+
+    console.log(existingSubscription, "EXISTING SUBSCRIPTION");
+
+    if(existingSubscription.length){
+      return res.status(400).json({error: "You're already subscribed"})
+    }
+
+    const newSubscription = await prisma.subscription.create({
+      data: {
+        userId: userId,
+        textId: textId,
+        chapter: chapter,
+        due: due
+      }
+    })
+
+    if(!newSubscription){
+      return res.status(500).json({error: "Something went wrong with creating the subscription"})
+    }
+    return res.status(200).json(newSubscription);
+  } catch(error){
+    console.error("Error creating subscription:", error);
+    res.status(500).json({error: "Internal server error"});
+  }
+})
+
+router.post("/deletesubscription", authMiddleware, async(req, res) => {
+  const { userId, textId, chapter } = req.body;
+
+  if(!userId || !textId || !chapter){
+    return res.status(400).json({error: "Missing data"});
+  }
+
+  try {
+    const deletedSubscription = await prisma.subscription.deleteMany({
+      where: {
+        userId: userId,
+        textId: textId,
+        chapter: chapter
+      }
+    })
+
+    if(!deletedSubscription){
+      return res.status(500).json({error: "Something went wrong with creating the subscription"})
+    }
+    return res.status(200).json(deletedSubscription);
+  } catch(error){
+    console.error("Error creating subscription:", error);
+    res.status(500).json({error: "Internal server error"});
+  }
+
+})
+
 export default router;
