@@ -26,6 +26,7 @@ type ExtractProps = {
   fullText: string;
   portrait?: any;
   thumbnail?: any;
+  textId: string;
 };
 
 export default function EReader() {
@@ -42,6 +43,7 @@ export default function EReader() {
     fullText: "",
     portrait: null,
     thumbnail: null,
+    textId: "",
   });
 
   type CommentType = {
@@ -63,8 +65,78 @@ export default function EReader() {
     setLike(!like);
   }
 
-  function toggleSubscribe() {
-    setSubscribe(!subscribe);
+  async function toggleSubscribe() {
+    await setSubscribe((prevState) => {
+      const subscribed = !prevState;
+
+      if (subscribed) {
+        subscribeToSeries();
+      } else if (!subscribed) {
+        unsubscribeFromSeries();
+      }
+
+      return subscribed;
+    });
+  }
+
+  async function subscribeToSeries() {
+    const token = await AsyncStorage.getItem("token");
+    const userId = await AsyncStorage.getItem("userId");
+
+    try {
+      const response = await fetch(`${API_URL}/api/createsubscription`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: userId,
+          textId: extract.textId,
+          chapter: extract.chapter + 1,
+          due: new Date(new Date().getTime()),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Failed to subscribe");
+      }
+
+      console.log(result);
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  }
+
+  async function unsubscribeFromSeries() {
+    const token = await AsyncStorage.getItem("token");
+    const userId = await AsyncStorage.getItem("userId");
+
+    try {
+      const response = await fetch(`${API_URL}/api/deletesubscription`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: userId,
+          textId: extract.textId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Failed to delete subscription");
+      }
+
+      console.log(result);
+    } catch (error) {
+      console.log("Error:", error);
+    }
   }
 
   const router = useRouter();
@@ -127,6 +199,38 @@ export default function EReader() {
     }
   };
 
+  const checkSubscriptions = async (textId: string) => {
+    const userId = await AsyncStorage.getItem("userId");
+    const token = await AsyncStorage.getItem("token");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/checksubscription?userId=${userId}&textId=${textId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const subscription = await response.json();
+
+      if (!response.ok) {
+        throw Error("Failed to check subscriptions");
+      }
+
+      if (subscription.textId) {
+        setSubscribe(true);
+      } else {
+        setSubscribe(false);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -149,6 +253,8 @@ export default function EReader() {
         }
 
         const result = await response.json();
+        checkSubscriptions(result.textId);
+
         setExtract(result);
         await getComments();
       } catch (error) {
