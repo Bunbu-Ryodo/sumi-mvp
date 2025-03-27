@@ -407,4 +407,88 @@ router.get("/getsubscriptions", authMiddleware, async(req, res) => {
   }
 })
 
+router.post("/createinstalments", authMiddleware, async(req, res) => {
+  const { dueInstalments } = req.body;
+
+  if(!dueInstalments.length){
+    return res.status(400).json({error: "Missing data"})
+  }
+
+  try {
+    const instalmentsToProcess = [];
+
+    for(let i = 0; i < dueInstalments.length; i++){
+      
+      const extract = await prisma.extract.findFirst({
+        where: {
+          textId: dueInstalments[i].textId,
+          chapter: dueInstalments[i].chapter
+        }
+      })
+
+      if(!extract){
+        return res.status(400).json({error: "Cannot find the extract"});
+      }
+
+      const instalmentToProcess = {
+        extractId: extract.id,
+        userId: dueInstalments[i].userId,
+        title: extract.title,
+        author: extract.author,
+        subscribeArt: extract.subscribeArt
+      }
+
+      if(instalmentToProcess){
+        instalmentsToProcess.push(instalmentToProcess);
+      }
+
+      await prisma.subscription.update({
+        where: {
+          id: dueInstalments[i].id
+        },
+        data: {
+          chapter: {
+            increment: 1
+          },
+          due: new Date(new Date().getTime() + 5 * 604800000)
+        }
+      })
+    }
+
+    const processedInstalments = await prisma.instalment.createMany({
+      data: instalmentsToProcess
+    })
+
+    return res.status(200).json(processedInstalments);
+  } catch(error) {
+    console.error("Error:", error);
+  }
+})
+
+router.get("/getinstalments", authMiddleware, async(req, res) => {
+  const { userId } = req.query;
+
+  if(!userId){
+    return res.status(400).json({error: "Missing user id"});
+  }
+
+  try {
+    const instalments = await prisma.instalment.findMany({
+      where: {
+        userId: userId
+      }
+    })
+
+    if(!instalments){
+      return res.status(500).json({error: "Something went wrong with getting the instalments"})
+    }
+
+    console.log(instalments, "INSTALMENTS");
+    return res.status(200).json(instalments)
+  } catch(error){
+    console.log("Error:", error);
+    return res.status(500).json({error: "Internal server error"});
+  }
+});
+
 export default router;

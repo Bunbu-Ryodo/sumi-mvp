@@ -94,7 +94,7 @@ export default function EReader() {
           userId: userId,
           textId: extract.textId,
           chapter: extract.chapter + 1,
-          due: new Date(new Date().getTime() + 5 * 60000),
+          due: new Date(new Date().getTime()),
         }),
       });
 

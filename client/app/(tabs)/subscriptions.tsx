@@ -1,6 +1,13 @@
-import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  ActivityIndicator,
+} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import SubscriptionsList from "../../components/subscriptionList";
+import Subscription from "../../components/subscription";
 import { useEffect, useState } from "react";
 import getEnvVars from "../../config.js";
 const { API_URL } = getEnvVars();
@@ -9,9 +16,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 type Subscription = {
   id: string;
   chapter: number;
-  due: Date;
+  due: string;
   textId: string;
   userId: string;
+};
+
+type Instalment = {
+  id: string;
+  extractId: string;
+  userId: string;
+  title: string;
+  author: string;
+  subscribeArt: string;
 };
 
 export default function Subscriptions() {
@@ -31,33 +47,75 @@ export default function Subscriptions() {
           }
         );
 
-        const result = await response.json();
+        const subscriptions = await response.json();
 
         if (!response.ok) {
           throw new Error("Failed to fetch subscriptions");
         }
 
-        setSubscriptions(result);
+        const dueInstalments = subscriptions.filter(
+          (subscription: Subscription) => {
+            const dueDate = new Date(subscription.due);
+            return dueDate < new Date();
+          }
+        );
+
+        if (dueInstalments.length) {
+          const postInstalments = await fetch(
+            `${API_URL}/api/createinstalments`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ dueInstalments }),
+            }
+          );
+
+          await postInstalments.json();
+
+          if (!postInstalments.ok) {
+            throw new Error("Failed to process instalments");
+          }
+        }
+
+        const getInstalments = await fetch(
+          `${API_URL}/api/getinstalments?userId=${userId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const instalments = await getInstalments.json();
+
+        if (!getInstalments.ok) {
+          throw new Error("Failed to process instalments");
+        }
+
+        populateInstalments(instalments);
       } catch (error) {
         console.error("Error:", error);
+      } finally {
+        setLoading(false); // Set loading to false after fetching data
       }
     };
     loadSubscriptions();
-    const instalments = checkForDueInstalments();
-    console.log(instalments);
   }, []);
 
-  function checkForDueInstalments() {
-    const dueInstalments = subscriptions.map((subscription, index) => {
-      console.log(new Date(subscription.due));
-      console.log(new Date());
-      return subscription.due < new Date();
+  async function populateInstalments(instalments: Instalment[]) {
+    await setReadyInstalments((prevState) => {
+      setLoading(false);
+      return instalments;
     });
-    return dueInstalments;
   }
 
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [dueInstalments, setDueInstalments] = useState([]);
+  const [readyInstalments, setReadyInstalments] = useState<Instalment[]>([]);
+  const [loading, setLoading] = useState(true); // Add a loading state
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.extractContainer}>
@@ -67,7 +125,27 @@ export default function Subscriptions() {
             <Ionicons name="mail-unread" size={24} color={"#393E41"}></Ionicons>
           </View>
         </View>
-        <SubscriptionsList></SubscriptionsList>
+        <View style={styles.subscriptionSection}>
+          {loading ? ( // Show a loading indicator while fetching data
+            <ActivityIndicator size="large" color="#393E41" />
+          ) : readyInstalments.length > 0 ? ( // Render Subscription components if data is available
+            readyInstalments.map((instalment, index) => (
+              <Subscription
+                key={index}
+                id={instalment.id}
+                extractId={instalment.extractId}
+                userId={instalment.userId}
+                title={instalment.title}
+                author={instalment.author}
+                subscribeArt={instalment.subscribeArt}
+              />
+            ))
+          ) : (
+            <Text style={styles.noInstalmentsText}>
+              No instalments available
+            </Text>
+          )}
+        </View>
       </View>
     </ScrollView>
   );
@@ -98,5 +176,15 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 24,
     width: "90%",
+  },
+  subscriptionSection: {
+    marginTop: 12,
+    flexDirection: "row",
+    padding: 8,
+    width: "100%",
+  },
+  noInstalmentsText: {
+    fontFamily: "QuicksandReg",
+    fontSize: 16,
   },
 });
