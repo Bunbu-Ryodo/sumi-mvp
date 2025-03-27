@@ -317,6 +317,29 @@ router.post("/undolikecomment", authMiddleware, async(req, res) => {
   }
 })
 
+
+router.get("/checksubscription", authMiddleware, async(req, res) => {
+  const { userId, textId } = req.query;
+
+  try {
+    const existingSubscription = await prisma.subscription.findFirst({
+      where: {
+        userId: userId,
+        textId: textId
+      }
+    })
+
+    if(existingSubscription){
+      return res.status(200).json(existingSubscription);
+    }
+
+    return res.status(200).json({message: "No subscription found"});
+  } catch(error){
+    console.error("Error checking subscription:", error);
+    res.status(500).json({error: "Internal server error"});
+  }
+});
+
 router.post("/createsubscription", authMiddleware, async(req, res) => {
   const { userId, textId, chapter, due } = req.body;
 
@@ -325,15 +348,14 @@ router.post("/createsubscription", authMiddleware, async(req, res) => {
   }
 
   try {
-    const existingSubscription = await prisma.subscription.findMany({
+    const existingSubscription = await prisma.subscription.findFirst({
       where: {
         userId: userId,
-        textId: textId,
-        chapter: chapter
+        textId: textId
       }
     })
 
-    if(existingSubscription.length){
+    if(existingSubscription){
       return res.status(400).json({error: "You're already subscribed"})
     }
 
@@ -357,9 +379,9 @@ router.post("/createsubscription", authMiddleware, async(req, res) => {
 })
 
 router.post("/deletesubscription", authMiddleware, async(req, res) => {
-  const { userId, textId, chapter } = req.body;
+  const { userId, textId } = req.body;
 
-  if(!userId || !textId || !chapter){
+  if(!userId || !textId){
     return res.status(400).json({error: "Missing data"});
   }
 
@@ -368,19 +390,26 @@ router.post("/deletesubscription", authMiddleware, async(req, res) => {
       where: {
         userId: userId,
         textId: textId,
-        chapter: chapter
       }
     })
 
-    if(!deletedSubscription){
-      return res.status(500).json({error: "Something went wrong with creating the subscription"})
+    const deletedInstalments = await prisma.instalment.deleteMany({
+      where: {
+        userId: userId,
+        textId: textId
+      }
+    })
+
+    if(!deletedSubscription || !deletedInstalments){
+      return res.status(500).json({error: "Something went wrong with deleting the subscription"})
     }
-    return res.status(200).json(deletedSubscription);
+
+    return res.status(200).json({deletedSubscription: deletedSubscription, deletedInstalments: deletedInstalments});
   } catch(error){
     console.error("Error creating subscription:", error);
     res.status(500).json({error: "Internal server error"});
   }
-})
+}),
 
 router.get("/getsubscriptions", authMiddleware, async(req, res) => {
   const { userId } = req.query;
@@ -405,7 +434,7 @@ router.get("/getsubscriptions", authMiddleware, async(req, res) => {
     console.log("Error:", error);
     return res.status(500).json({error: "Internal server error"});
   }
-})
+}),
 
 router.post("/createinstalments", authMiddleware, async(req, res) => {
   const { dueInstalments } = req.body;
@@ -434,6 +463,7 @@ router.post("/createinstalments", authMiddleware, async(req, res) => {
         extractId: extract.id,
         userId: dueInstalments[i].userId,
         title: extract.title,
+        textId: extract.textId,
         author: extract.author,
         subscribeArt: extract.subscribeArt
       }
@@ -463,7 +493,7 @@ router.post("/createinstalments", authMiddleware, async(req, res) => {
   } catch(error) {
     console.error("Error:", error);
   }
-})
+}),
 
 router.get("/getinstalments", authMiddleware, async(req, res) => {
   const { userId } = req.query;
@@ -483,12 +513,11 @@ router.get("/getinstalments", authMiddleware, async(req, res) => {
       return res.status(500).json({error: "Something went wrong with getting the instalments"})
     }
 
-    console.log(instalments, "INSTALMENTS");
     return res.status(200).json(instalments)
   } catch(error){
     console.log("Error:", error);
     return res.status(500).json({error: "Internal server error"});
   }
-});
+})
 
 export default router;

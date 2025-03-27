@@ -1,9 +1,9 @@
 import { View, Image, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Link } from "expo-router";
 
 type instalmentProps = {
   id: string;
   extractId: string;
-  userId: string;
   title: string;
   author: string;
   subscribeArt: string;
@@ -12,18 +12,22 @@ type instalmentProps = {
 export default function Subscription({
   id,
   extractId,
-  userId,
   title,
   author,
   subscribeArt,
 }: instalmentProps) {
   return (
-    <View>
-      <TouchableOpacity key={id}>
-        <Image style={styles.imageIcons} source={{ uri: subscribeArt }} />
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.author}>{author}</Text>
-      </TouchableOpacity>
+    <View style={styles.container}>
+      <Link
+        href={{ pathname: "/ereader/[id]", params: { id: extractId } }}
+        asChild
+      >
+        <TouchableOpacity key={id} style={styles.subscriptionButton}>
+          <Image style={styles.imageIcons} source={{ uri: subscribeArt }} />
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.author}>{author}</Text>
+        </TouchableOpacity>
+      </Link>
     </View>
   );
 }
@@ -34,6 +38,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 8,
     width: "100%",
+  },
+  subscriptionButton: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  container: {
+    padding: 8,
+    margin: 8,
   },
   imageIcons: {
     height: 100,

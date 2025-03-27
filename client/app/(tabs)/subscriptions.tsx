@@ -126,15 +126,14 @@ export default function Subscriptions() {
           </View>
         </View>
         <View style={styles.subscriptionSection}>
-          {loading ? ( // Show a loading indicator while fetching data
+          {loading ? (
             <ActivityIndicator size="large" color="#393E41" />
-          ) : readyInstalments.length > 0 ? ( // Render Subscription components if data is available
+          ) : readyInstalments.length > 0 ? (
             readyInstalments.map((instalment, index) => (
               <Subscription
                 key={index}
                 id={instalment.id}
                 extractId={instalment.extractId}
-                userId={instalment.userId}
                 title={instalment.title}
                 author={instalment.author}
                 subscribeArt={instalment.subscribeArt}
@@ -182,6 +181,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 8,
     width: "100%",
+    flexWrap: "wrap",
   },
   noInstalmentsText: {
     fontFamily: "QuicksandReg",

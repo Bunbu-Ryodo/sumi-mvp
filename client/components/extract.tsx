@@ -1,7 +1,10 @@
 import { Text, View, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+const { API_URL } = getEnvVars();
+import getEnvVars from "../config.js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type ExtractProps = {
   id: string;
@@ -12,6 +15,7 @@ type ExtractProps = {
   previewText: string;
   portrait?: any;
   thumbnail?: any;
+  textId: string;
 };
 
 export default function Extract({
@@ -23,6 +27,7 @@ export default function Extract({
   previewText,
   portrait,
   thumbnail,
+  textId,
 }: ExtractProps) {
   const [like, setLike] = useState(false);
   const [subscribe, setSubscribe] = useState(false);
@@ -31,9 +36,115 @@ export default function Extract({
     setLike(!like);
   }
 
-  function toggleSubscribe() {
-    setSubscribe(!subscribe);
+  useEffect(() => {
+    checkSubscriptions();
+  }, []);
+
+  async function toggleSubscribe() {
+    await setSubscribe((prevState) => {
+      const subscribed = !prevState;
+
+      if (subscribed) {
+        subscribeToSeries();
+      } else if (!subscribed) {
+        unsubscribeFromSeries();
+      }
+
+      return subscribed;
+    });
   }
+
+  async function subscribeToSeries() {
+    const token = await AsyncStorage.getItem("token");
+    const userId = await AsyncStorage.getItem("userId");
+
+    try {
+      const response = await fetch(`${API_URL}/api/createsubscription`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: userId,
+          textId: textId,
+          chapter: chapter + 1,
+          due: new Date(new Date().getTime()),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Failed to subscribe");
+      }
+
+      console.log(result);
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  }
+
+  async function unsubscribeFromSeries() {
+    const token = await AsyncStorage.getItem("token");
+    const userId = await AsyncStorage.getItem("userId");
+
+    try {
+      const response = await fetch(`${API_URL}/api/deletesubscription`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: userId,
+          textId: textId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Failed to delete subscription");
+      }
+
+      console.log(result);
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  }
+
+  const checkSubscriptions = async () => {
+    const userId = await AsyncStorage.getItem("userId");
+    const token = await AsyncStorage.getItem("token");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/checksubscription?userId=${userId}&textId=${textId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const subscription = await response.json();
+
+      if (!response.ok) {
+        throw Error("Failed to check subscriptions");
+      }
+
+      if (subscription.textId) {
+        setSubscribe(true);
+      } else {
+        setSubscribe(false);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
   return (
     <View style={styles.extract}>

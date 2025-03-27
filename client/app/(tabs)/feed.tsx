@@ -65,6 +65,7 @@ export default function FeedScreen() {
           <Extract
             key={index}
             id={extract.id}
+            textId={extract.textId}
             author={extract.author}
             title={extract.title}
             year={extract.year}

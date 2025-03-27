@@ -124,7 +124,6 @@ export default function EReader() {
         body: JSON.stringify({
           userId: userId,
           textId: extract.textId,
-          chapter: extract.chapter + 1,
         }),
       });
 
@@ -200,6 +199,38 @@ export default function EReader() {
     }
   };
 
+  const checkSubscriptions = async (textId: string) => {
+    const userId = await AsyncStorage.getItem("userId");
+    const token = await AsyncStorage.getItem("token");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/checksubscription?userId=${userId}&textId=${textId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const subscription = await response.json();
+
+      if (!response.ok) {
+        throw Error("Failed to check subscriptions");
+      }
+
+      if (subscription.textId) {
+        setSubscribe(true);
+      } else {
+        setSubscribe(false);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -222,6 +253,8 @@ export default function EReader() {
         }
 
         const result = await response.json();
+        checkSubscriptions(result.textId);
+
         setExtract(result);
         await getComments();
       } catch (error) {
