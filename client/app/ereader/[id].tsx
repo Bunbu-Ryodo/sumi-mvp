@@ -1,3 +1,4 @@
+import * as Clipboard from "expo-clipboard";
 import {
   View,
   Text,
@@ -5,13 +6,14 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import getEnvVars from "../../config.js";
-const { API_URL } = getEnvVars();
+const { API_URL, CLIENT_URL } = getEnvVars();
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Comment from "../../components/comment";
@@ -60,6 +62,15 @@ export default function EReader() {
   const [subscribe, setSubscribe] = useState(false);
   const [message, setMessage] = useState("");
   const [comments, setComments] = useState<CommentType[]>([]);
+
+  const copyToClipboard = async () => {
+    const link = `${CLIENT_URL}/share_text/${extract.id}`;
+    await Clipboard.setStringAsync(link);
+    Alert.alert(
+      "Copied to Clipboard",
+      "The link has been copied to your clipboard."
+    );
+  };
 
   function toggleLike() {
     setLike(!like);
@@ -302,8 +313,8 @@ export default function EReader() {
               Buy a high quality edition of the full text
             </Text>
           </View>
-          <TouchableOpacity>
-            <Ionicons name="share-social-outline" size={24} color="#8980F5" />
+          <TouchableOpacity onPress={copyToClipboard}>
+            <Ionicons name="clipboard-outline" size={24} color="#8980F5" />
           </TouchableOpacity>
         </View>
         <Link style={styles.returnAnchor} href="/feed" asChild>

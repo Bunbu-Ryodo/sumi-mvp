@@ -4,9 +4,11 @@ import Constants from 'expo-constants';
 const ENV = {
   dev: {
     API_URL: 'http://localhost:5050',
+    CLIENT_URL:"http://localhost:8081"
   },
   prod: {
     API_URL: 'http://localhost:5050',
+    CLIENT_URL: "http://localhost:8081"
   },
 };
 
