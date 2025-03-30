@@ -1,8 +1,16 @@
-import { Text, View, StyleSheet, Image, TouchableOpacity } from "react-native";
+import * as Clipboard from "expo-clipboard";
+import {
+  Text,
+  View,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState, useEffect } from "react";
-const { API_URL } = getEnvVars();
+const { API_URL, CLIENT_URL } = getEnvVars();
 import getEnvVars from "../config.js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -31,6 +39,15 @@ export default function Extract({
 }: ExtractProps) {
   const [like, setLike] = useState(false);
   const [subscribe, setSubscribe] = useState(false);
+
+  const copyToClipboard = async () => {
+    const link = `${CLIENT_URL}/share_text/${id}`;
+    await Clipboard.setStringAsync(link);
+    Alert.alert(
+      "Copied to Clipboard",
+      "The link has been copied to your clipboard."
+    );
+  };
 
   function toggleLike() {
     setLike(!like);
@@ -218,11 +235,8 @@ export default function Extract({
             color="#FE7F2D"
           />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.icon}>
-          <Ionicons name="chatbubble-outline" size={24} color="#77966D" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.icon}>
-          <Ionicons name="share-social-outline" size={24} color="#8980F5" />
+        <TouchableOpacity style={styles.icon} onPress={copyToClipboard}>
+          <Ionicons name="clipboard-outline" size={24} color="#8980F5" />
         </TouchableOpacity>
       </View>
     </View>

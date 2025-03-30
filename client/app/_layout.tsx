@@ -34,6 +34,10 @@ export default function RootLayout() {
         name="ereader/[id]"
         options={{ headerShown: false }}
       ></Stack.Screen>
+      <Stack.Screen
+        name="share_text/[id]"
+        options={{ headerShown: false }}
+      ></Stack.Screen>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
     </Stack>
