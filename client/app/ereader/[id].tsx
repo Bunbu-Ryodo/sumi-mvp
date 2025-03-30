@@ -48,20 +48,8 @@ export default function EReader() {
     textId: "",
   });
 
-  type CommentType = {
-    id: string;
-    extractId: string;
-    message: string;
-    readerTag: string;
-    userId: string;
-    time: string;
-    likes: number;
-  };
-
   const [like, setLike] = useState(false);
   const [subscribe, setSubscribe] = useState(false);
-  const [message, setMessage] = useState("");
-  const [comments, setComments] = useState<CommentType[]>([]);
 
   const copyToClipboard = async () => {
     const link = `${CLIENT_URL}/share_text/${extract.id}`;
@@ -152,64 +140,6 @@ export default function EReader() {
 
   const router = useRouter();
 
-  const getComments = async () => {
-    const token = await AsyncStorage.getItem("token");
-
-    try {
-      const response = await fetch(`${API_URL}/api/comment?extractId=${id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error("Failed to load comments");
-      }
-
-      if (result) setComments(result);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-
-  const postComment = async () => {
-    const userId = await AsyncStorage.getItem("userId");
-    const token = await AsyncStorage.getItem("token");
-    const readerTag = await AsyncStorage.getItem("readerTag");
-
-    try {
-      const response = await fetch(`${API_URL}/api/comment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          userId: userId,
-          message: message,
-          extractId: id,
-          time: new Date(), // Get the current date and time in milliseconds
-          readerTag: readerTag,
-        }),
-      });
-
-      const newComment = await response.json();
-
-      if (!response.ok) {
-        throw new Error("Failed to post comment");
-      }
-
-      setComments((prevComments) => [newComment, ...prevComments]);
-      setMessage(""); // Clear the input field
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-
   const checkSubscriptions = async (textId: string) => {
     const userId = await AsyncStorage.getItem("userId");
     const token = await AsyncStorage.getItem("token");
@@ -267,7 +197,6 @@ export default function EReader() {
         checkSubscriptions(result.textId);
 
         setExtract(result);
-        await getComments();
       } catch (error) {
         console.error("Error:", error);
       }
@@ -325,36 +254,6 @@ export default function EReader() {
             <Text style={styles.shoppingText}>Return to Feed</Text>
           </View>
         </Link>
-        <Text style={styles.discuss}>Discuss.</Text>
-        <TextInput
-          editable
-          multiline
-          numberOfLines={8}
-          maxLength={490}
-          style={styles.addCommentTextarea}
-          onChangeText={setMessage}
-        />
-        <TouchableOpacity
-          style={styles.submitCommentButton}
-          onPress={postComment}
-        >
-          <Text style={styles.submitCommentText}>Comment</Text>
-        </TouchableOpacity>
-        {comments &&
-          comments
-            .slice()
-            .reverse()
-            .map((comment: CommentType, index: number) => (
-              <Comment
-                id={comment.id}
-                userId={comment.userId}
-                key={index}
-                message={comment.message}
-                readerTag={comment.readerTag}
-                time={comment.time}
-                likes={comment.likes}
-              />
-            ))}
       </ScrollView>
     </ScrollView>
   );
