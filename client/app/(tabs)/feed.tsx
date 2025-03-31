@@ -5,6 +5,7 @@ const { API_URL } = getEnvVars();
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { useUser } from "@replyke/expo";
 
 type Extract = {
   id: string;
@@ -21,6 +22,9 @@ type Extract = {
 };
 
 export default function FeedScreen() {
+  const { user } = useUser();
+  console.log(user, "REPLYKE USER???");
+
   const [extracts, setExtracts] = useState<Extract[]>([]);
   const router = useRouter();
 

@@ -11,11 +11,13 @@ const { API_URL } = getEnvVars();
 import { useEffect, useState } from "react";
 const router = useRouter();
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "@replyke/expo";
 
 export default function Index() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [signinError, setSigninError] = useState("");
+  const { signInWithEmailAndPassword } = useAuth();
 
   const handleSignIn = async () => {
     setEmail(email.trim());
@@ -43,6 +45,14 @@ export default function Index() {
       await AsyncStorage.setItem("userId", result.userId);
       await AsyncStorage.setItem("readerTag", result.readerTag);
 
+      if (signInWithEmailAndPassword) {
+        await signInWithEmailAndPassword({
+          email: email,
+          password: password,
+        });
+      } else {
+        console.error("signInWithEmailAndPassword is undefined");
+      }
       router.push("/feed");
     } catch (error) {
       console.error("Error:", error);

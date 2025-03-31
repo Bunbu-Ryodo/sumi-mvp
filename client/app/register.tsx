@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import getEnvVars from "../config";
 const { API_URL } = getEnvVars();
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "@replyke/expo";
 
 export default function Register() {
   const [readerTag, setReaderTag] = useState("");
@@ -21,6 +22,7 @@ export default function Register() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const router = useRouter();
+  const { signUpWithEmailAndPassword } = useAuth();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -63,6 +65,18 @@ export default function Register() {
       await AsyncStorage.setItem("token", result.token);
       await AsyncStorage.setItem("userId", result.userId);
       await AsyncStorage.setItem("readerTag", result.readerTag);
+
+      if (signUpWithEmailAndPassword) {
+        await signUpWithEmailAndPassword({
+          email: email,
+          password: password,
+          username: readerTag,
+        });
+
+        console.log("Did this work???");
+      } else {
+        console.error("signUpWithEmailAndPassword is undefined");
+      }
 
       router.push("/feed");
     } catch (error: any) {
