@@ -32,7 +32,6 @@ export default function Comment({
   const [isVisible, setIsVisible] = useState(true);
   const [editing, setEditing] = useState(false);
   const [comment, setComment] = useState(message);
-  const [like, setLike] = useState(false);
   const isInitialMount = useRef(true);
 
   const formatter = new Intl.DateTimeFormat("en-GB", {
@@ -48,18 +47,6 @@ export default function Comment({
 
     getUserSession();
   }, []);
-
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-    } else {
-      if (like) {
-        likeComment();
-      } else {
-        undoLikeComment();
-      }
-    }
-  }, [like]);
 
   async function deleteComment() {
     const token = await AsyncStorage.getItem("token");
@@ -89,10 +76,6 @@ export default function Comment({
     setComment(cmnt);
   }
 
-  async function toggleLike() {
-    await setLike((prevLike) => !prevLike);
-  }
-
   async function updateComment() {
     const token = await AsyncStorage.getItem("token");
     const userId = await AsyncStorage.getItem("userId");
@@ -108,23 +91,6 @@ export default function Comment({
       });
       setComment(comment);
       setEditing(false);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  }
-
-  async function likeComment() {
-    const token = await AsyncStorage.getItem("token");
-
-    try {
-      await fetch(`${API_URL}/api/likecomment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ id }),
-      });
     } catch (error) {
       console.error("Error:", error);
     }
@@ -180,13 +146,6 @@ export default function Comment({
       {likes > 0 && <Text style={styles.likesCount}>+{likes}</Text>}
       {userSession === userId && (
         <View style={styles.commentIcons}>
-          <TouchableOpacity style={styles.icon} onPress={toggleLike}>
-            <Ionicons
-              name={like ? "thumbs-up" : "thumbs-up-outline"}
-              size={24}
-              color="#77966D"
-            />
-          </TouchableOpacity>
           <TouchableOpacity style={styles.icon} onPress={deleteComment}>
             <Ionicons name="trash" size={24} color="#D64045" />
           </TouchableOpacity>
