@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import getEnvVars from "../config";
 const { API_URL } = getEnvVars();
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAuth } from "@replyke/expo";
+import { useAuth, useUser } from "@replyke/expo";
 
 export default function Register() {
   const [readerTag, setReaderTag] = useState("");
@@ -23,6 +23,7 @@ export default function Register() {
   const [passwordError, setPasswordError] = useState("");
   const router = useRouter();
   const { signUpWithEmailAndPassword } = useAuth();
+  const { user } = useUser();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -45,27 +46,6 @@ export default function Register() {
     setConfirmPassword(confirmPassword.trim());
 
     try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ readerTag, email, confirmPassword, password }),
-      });
-      const result = await response.json();
-      if (result.error) setRegisterError(result.error);
-      if (result.error == "Passwords do not match")
-        setPasswordError(result.error);
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to register");
-      }
-
-      console.log(result, "RESULT");
-      await AsyncStorage.setItem("token", result.token);
-      await AsyncStorage.setItem("userId", result.userId);
-      await AsyncStorage.setItem("readerTag", result.readerTag);
-
       if (signUpWithEmailAndPassword) {
         await signUpWithEmailAndPassword({
           email: email,
@@ -73,7 +53,33 @@ export default function Register() {
           username: readerTag,
         });
 
-        console.log("Did this work???");
+        let id = user?.id;
+
+        const response = await fetch(`${API_URL}/auth/register`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            readerTag,
+            email,
+            confirmPassword,
+            password,
+            id,
+          }),
+        });
+        const result = await response.json();
+        if (result.error) setRegisterError(result.error);
+        if (result.error == "Passwords do not match")
+          setPasswordError(result.error);
+
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to register");
+        }
+
+        // await AsyncStorage.setItem("token", result.token);
+        // await AsyncStorage.setItem("userId", result.userId);
+        // await AsyncStorage.setItem("readerTag", result.readerTag);
       } else {
         console.error("signUpWithEmailAndPassword is undefined");
       }

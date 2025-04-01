@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import getEnvVars from "../../config.js";
 const { API_URL } = getEnvVars();
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useUser } from "@replyke/expo";
 
 type Subscription = {
   id: string;
@@ -31,18 +32,20 @@ type Instalment = {
 };
 
 export default function Subscriptions() {
+  const { user } = useUser();
   useEffect(() => {
+    setUserId();
     const loadSubscriptions = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
+        // const token = await AsyncStorage.getItem("token");
         const userId = await AsyncStorage.getItem("userId");
         const response = await fetch(
-          `${API_URL}/api/getsubscriptions?userId=${userId}`,
+          `${API_URL}/api/getsubscriptions?userId=${user?.id || userId}`,
           {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+              // Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -67,7 +70,7 @@ export default function Subscriptions() {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
+                // Authorization: `Bearer ${token}`,
               },
               body: JSON.stringify({ dueInstalments }),
             }
@@ -81,12 +84,12 @@ export default function Subscriptions() {
         }
 
         const getInstalments = await fetch(
-          `${API_URL}/api/getinstalments?userId=${userId}`,
+          `${API_URL}/api/getinstalments?userId=${user?.id || userId}`,
           {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+              // Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -113,6 +116,12 @@ export default function Subscriptions() {
       return instalments;
     });
   }
+
+  const setUserId = async () => {
+    if (user) {
+      await AsyncStorage.setItem("userId", user.id);
+    }
+  };
 
   const [readyInstalments, setReadyInstalments] = useState<Instalment[]>([]);
   const [loading, setLoading] = useState(true); // Add a loading state

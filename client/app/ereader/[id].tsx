@@ -17,6 +17,7 @@ const { API_URL, CLIENT_URL } = getEnvVars();
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Comment from "../../components/comment";
+import { useUser, useAuth } from "@replyke/expo";
 
 type ExtractProps = {
   id: string;
@@ -34,6 +35,8 @@ type ExtractProps = {
 export default function EReader() {
   let { id } = useLocalSearchParams();
   id = id.toString();
+
+  const { user } = useUser();
 
   const [extract, setExtract] = useState<ExtractProps>({
     id: "",
@@ -79,18 +82,18 @@ export default function EReader() {
   }
 
   async function subscribeToSeries() {
-    const token = await AsyncStorage.getItem("token");
-    const userId = await AsyncStorage.getItem("userId");
+    // const token = await AsyncStorage.getItem("token");
+    // const userId = await AsyncStorage.getItem("userId");
 
     try {
       const response = await fetch(`${API_URL}/api/createsubscription`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          // Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          userId: userId,
+          userId: user?.id,
           textId: extract.textId,
           chapter: extract.chapter + 1,
           due: new Date(new Date().getTime()),
@@ -110,18 +113,20 @@ export default function EReader() {
   }
 
   async function unsubscribeFromSeries() {
-    const token = await AsyncStorage.getItem("token");
+    // const token = await AsyncStorage.getItem("token");
     const userId = await AsyncStorage.getItem("userId");
+
+    console.log(extract.textId, "What's the text id?");
 
     try {
       const response = await fetch(`${API_URL}/api/deletesubscription`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          // Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          userId: userId,
+          userId: user?.id || userId,
           textId: extract.textId,
         }),
       });
@@ -140,18 +145,26 @@ export default function EReader() {
 
   const router = useRouter();
 
+  const setUserId = async () => {
+    if (user) {
+      await AsyncStorage.setItem("userId", user.id);
+    }
+  };
+
   const checkSubscriptions = async (textId: string) => {
     const userId = await AsyncStorage.getItem("userId");
-    const token = await AsyncStorage.getItem("token");
+    // const token = await AsyncStorage.getItem("token");
 
     try {
       const response = await fetch(
-        `${API_URL}/api/checksubscription?userId=${userId}&textId=${textId}`,
+        `${API_URL}/api/checksubscription?userId=${
+          user?.id || userId
+        }&textId=${textId}`,
         {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            // Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -173,14 +186,15 @@ export default function EReader() {
   };
 
   useEffect(() => {
+    setUserId();
+
     const fetchData = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
         const response = await fetch(`${API_URL}/api/ereader?id=${id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            // Authorization: `Bearer ${token}`,
           },
         });
 

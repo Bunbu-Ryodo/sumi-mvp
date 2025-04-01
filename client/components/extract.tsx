@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 const { API_URL, CLIENT_URL } = getEnvVars();
 import getEnvVars from "../config.js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useUser } from "@replyke/expo";
 
 type ExtractProps = {
   id: string;
@@ -40,6 +41,8 @@ export default function Extract({
   const [like, setLike] = useState(false);
   const [subscribe, setSubscribe] = useState(false);
 
+  const { user } = useUser();
+
   const copyToClipboard = async () => {
     const link = `${CLIENT_URL}/share_text/${id}`;
     await Clipboard.setStringAsync(link);
@@ -54,6 +57,7 @@ export default function Extract({
   }
 
   useEffect(() => {
+    setUserId();
     checkSubscriptions();
   }, []);
 
@@ -72,7 +76,6 @@ export default function Extract({
   }
 
   async function subscribeToSeries() {
-    const token = await AsyncStorage.getItem("token");
     const userId = await AsyncStorage.getItem("userId");
 
     try {
@@ -80,10 +83,9 @@ export default function Extract({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          userId: userId,
+          userId: user?.id || userId,
           textId: textId,
           chapter: chapter + 1,
           due: new Date(new Date().getTime()),
@@ -103,18 +105,18 @@ export default function Extract({
   }
 
   async function unsubscribeFromSeries() {
-    const token = await AsyncStorage.getItem("token");
     const userId = await AsyncStorage.getItem("userId");
+
+    console.log(textId, "What's the textId?");
 
     try {
       const response = await fetch(`${API_URL}/api/deletesubscription`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          userId: userId,
+          userId: user?.id || userId,
           textId: textId,
         }),
       });
@@ -133,16 +135,15 @@ export default function Extract({
 
   const checkSubscriptions = async () => {
     const userId = await AsyncStorage.getItem("userId");
-    const token = await AsyncStorage.getItem("token");
-
     try {
       const response = await fetch(
-        `${API_URL}/api/checksubscription?userId=${userId}&textId=${textId}`,
+        `${API_URL}/api/checksubscription?userId=${
+          user?.id || userId
+        }&textId=${textId}`,
         {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -160,6 +161,12 @@ export default function Extract({
       }
     } catch (error) {
       console.error("Error:", error);
+    }
+  };
+
+  const setUserId = async () => {
+    if (user) {
+      await AsyncStorage.setItem("userId", user.id);
     }
   };
 

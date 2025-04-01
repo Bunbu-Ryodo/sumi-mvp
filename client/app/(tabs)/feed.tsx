@@ -23,41 +23,45 @@ type Extract = {
 
 export default function FeedScreen() {
   const { user } = useUser();
-  console.log(user, "REPLYKE USER???");
 
   const [extracts, setExtracts] = useState<Extract[]>([]);
   const router = useRouter();
 
   useEffect(() => {
+    setUserId();
     const fetchData = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
         const response = await fetch(`${API_URL}/api/feed`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            // Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          if (errorData.error === "Invalid token.") {
-            await AsyncStorage.removeItem("token");
-            router.push("/"); // Redirect to login screen
-          }
-          throw new Error(errorData.error || "Failed to fetch extracts");
+          // const errorData = await response.json();
+          // if (errorData.error === "Invalid token.") {
+          //   await AsyncStorage.removeItem("token");
+          //   router.push("/"); // Redirect to login screen
+          // }
+          throw new Error("Failed to fetch extracts");
         }
 
         const result = await response.json();
         setExtracts(result);
       } catch (error) {
-        console.log(error);
         console.error("Error:", error);
       }
     };
     fetchData();
   }, []);
+
+  const setUserId = async () => {
+    if (user) {
+      await AsyncStorage.setItem("userId", user.id);
+    }
+  };
 
   return (
     <ScrollView

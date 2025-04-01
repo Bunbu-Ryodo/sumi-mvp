@@ -7,7 +7,7 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 
-router.get("/users", authMiddleware, async (req, res) => {
+router.get("/users", async (req, res) => {
   const { userId } = req.query;
   try {
     const foundUser = await prisma.users.findUnique({
@@ -23,13 +23,15 @@ router.get("/users", authMiddleware, async (req, res) => {
   }
 })
 
-router.post("/editreadertag", authMiddleware, async (req, res) => {
-  const { userId, readerTag } = req.body;
+router.post("/editreadertag", async (req, res) => {
+  const { id, readerTag } = req.body;
+
+  console.log(id, "ID");
 
   try {
     const editUser = await prisma.users.update({
       where: {
-        id: userId
+        id: id
       },
       data: {
         readerTag: readerTag
@@ -43,7 +45,7 @@ router.post("/editreadertag", authMiddleware, async (req, res) => {
   }
 })
 
-router.post("/editemail", authMiddleware, async (req, res) => {
+router.post("/editemail", async (req, res) => {
   const { userId, email, password } = req.body;
 
   try {
@@ -75,7 +77,7 @@ router.post("/editemail", authMiddleware, async (req, res) => {
   }
 })
 
-router.post("/changepassword", authMiddleware, async(req, res) => {
+router.post("/changepassword", async(req, res) => {
   const { userId, oldPassword, newPassword, confirmNewPassword } = req.body;
 
   try {
@@ -112,7 +114,7 @@ router.post("/changepassword", authMiddleware, async(req, res) => {
   }
 })
 
-router.get("/feed", authMiddleware, async (req, res) => {
+router.get("/feed", async (req, res) => {
     try {
       const chapter1Extracts = await prisma.extract.findMany({
         where: {
@@ -129,7 +131,7 @@ router.get("/feed", authMiddleware, async (req, res) => {
     }
   });
 
-router.get("/ereader", authMiddleware, async (req, res) => {
+router.get("/ereader", async (req, res) => {
 
   const { id } = req.query;
 
@@ -154,7 +156,7 @@ router.get("/ereader", authMiddleware, async (req, res) => {
   }
 })
 
-router.post("/comment", authMiddleware, async(req, res) => {
+router.post("/comment", async(req, res) => {
   const { userId, message, extractId, time, readerTag } = req.body;
 
   try {
@@ -179,7 +181,7 @@ router.post("/comment", authMiddleware, async(req, res) => {
   }
 })
 
-router.get("/comment", authMiddleware, async(req, res) => {
+router.get("/comment", async(req, res) => {
   const { extractId } = req.query
 
   if(!extractId){
@@ -205,7 +207,7 @@ router.get("/comment", authMiddleware, async(req, res) => {
   }
 })
 
-router.post("/deletecomment", authMiddleware, async(req, res) => {
+router.post("/deletecomment", async(req, res) => {
   const { id, userId } = req.body;
 
   if(!id || !userId){
@@ -228,7 +230,7 @@ router.post("/deletecomment", authMiddleware, async(req, res) => {
   }
 })
 
-router.post("/editcomment", authMiddleware, async(req, res) => {
+router.post("/editcomment", async(req, res) => {
   const {id, userId, comment } = req.body;
 
   if(!id || !userId || !comment){
@@ -257,7 +259,7 @@ router.post("/editcomment", authMiddleware, async(req, res) => {
   }
 })
 
-router.post("/likecomment", authMiddleware, async(req, res) => {
+router.post("/likecomment", async(req, res) => {
   const { id } = req.body;
 
   if(!id){
@@ -287,7 +289,7 @@ router.post("/likecomment", authMiddleware, async(req, res) => {
   }
 })
 
-router.post("/undolikecomment", authMiddleware, async(req, res) => {
+router.post("/undolikecomment", async(req, res) => {
   const { id } = req.body;
 
   if(!id){
@@ -318,7 +320,7 @@ router.post("/undolikecomment", authMiddleware, async(req, res) => {
 })
 
 
-router.get("/checksubscription", authMiddleware, async(req, res) => {
+router.get("/checksubscription", async(req, res) => {
   const { userId, textId } = req.query;
 
   try {
@@ -340,7 +342,7 @@ router.get("/checksubscription", authMiddleware, async(req, res) => {
   }
 });
 
-router.post("/createsubscription", authMiddleware, async(req, res) => {
+router.post("/createsubscription", async(req, res) => {
   const { userId, textId, chapter, due } = req.body;
 
   if(!userId || !textId || !chapter || !due){
@@ -378,7 +380,7 @@ router.post("/createsubscription", authMiddleware, async(req, res) => {
   }
 })
 
-router.post("/deletesubscription", authMiddleware, async(req, res) => {
+router.post("/deletesubscription", async(req, res) => {
   const { userId, textId } = req.body;
 
   if(!userId || !textId){
@@ -411,7 +413,7 @@ router.post("/deletesubscription", authMiddleware, async(req, res) => {
   }
 }),
 
-router.get("/getsubscriptions", authMiddleware, async(req, res) => {
+router.get("/getsubscriptions", async(req, res) => {
   const { userId } = req.query;
 
   if(!userId){
@@ -436,7 +438,7 @@ router.get("/getsubscriptions", authMiddleware, async(req, res) => {
   }
 }),
 
-router.post("/createinstalments", authMiddleware, async(req, res) => {
+router.post("/createinstalments", async(req, res) => {
   const { dueInstalments } = req.body;
 
   if(!dueInstalments.length){
@@ -495,7 +497,7 @@ router.post("/createinstalments", authMiddleware, async(req, res) => {
   }
 }),
 
-router.get("/getinstalments", authMiddleware, async(req, res) => {
+router.get("/getinstalments", async(req, res) => {
   const { userId } = req.query;
 
   if(!userId){

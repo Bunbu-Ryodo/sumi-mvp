@@ -12,6 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState, useEffect } from "react";
 import getEnvVars from "../../config";
 const { API_URL } = getEnvVars();
+import { useUser, useAuth } from "@replyke/expo";
 
 export default function Settings() {
   const router = useRouter();
@@ -26,134 +27,155 @@ export default function Settings() {
   const [readerTagChangeSuccess, setReaderTagChangeSuccess] = useState("");
   const [emailChangeSuccess, setEmailChangeSuccess] = useState("");
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState("");
+  const { user, updateUser } = useUser();
+  const { signOut } = useAuth();
 
   useEffect(() => {
+    setUserId();
     const getUser = async () => {
-      const token = await AsyncStorage.getItem("token");
-      const userId = await AsyncStorage.getItem("userId");
+      // const token = await AsyncStorage.getItem("token");
+      // const userId = await AsyncStorage.getItem("userId");
 
-      try {
-        const response = await fetch(`${API_URL}/api/users?userId=${userId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      // try {
+      //   const response = await fetch(
+      //     `${API_URL}/api/users?userId=${user?.id}`,
+      //     {
+      //       method: "GET",
+      //       headers: {
+      //         "Content-Type": "application/json",
+      //         // Authorization: `Bearer ${token}`,
+      //       },
+      //     }
+      //   );
 
-        if (!response.ok) {
-          throw new Error("Failed to get user");
-        }
+      // if (!response.ok) {
+      //   throw new Error("Failed to get user");
+      // }
 
-        const user = await response.json();
-        setEmail(user.email);
-        setReaderTag(user.readerTag);
-      } catch (error) {
-        console.error("Error:", error);
-      }
+      // const userForSettings = await response.json();
+      // setEmail(user?.email || "");
+      await setReaderTag(user?.username || "");
     };
     getUser();
+    // }, [user?.id]);
   }, []);
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem("token");
+      if (signOut) {
+        await signOut();
+      }
       router.push("/");
     } catch (error) {
       console.error("Error logging out:", error);
     }
   };
 
+  const setUserId = async () => {
+    if (user) {
+      await AsyncStorage.setItem("userId", user.id);
+    }
+  };
+
   const updateReaderTag = async () => {
-    const token = await AsyncStorage.getItem("token");
-    const userId = await AsyncStorage.getItem("userId");
+    try {
+      if (updateUser) {
+        await updateUser({
+          username: readerTag,
+        });
+        setReaderTagChangeSuccess("ReaderTag Successfully Changed");
+      }
+    } catch (error) {
+      setReaderTagChangeSuccess("");
+    }
 
     try {
+      const id = await AsyncStorage.getItem("userId");
+
       const response = await fetch(`${API_URL}/api/editreadertag`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ userId, readerTag }),
+        body: JSON.stringify({ id, readerTag }),
       });
-
       const result = await response.json();
       if (!response.ok) {
         setReaderTagChangeSuccess("");
         throw new Error(result.error || "Failed to update readerTag");
       }
-
       setReaderTagChangeSuccess("ReaderTag Successfully Changed");
     } catch (error) {
       console.log("Error:", error);
     }
   };
 
-  const updateEmail = async () => {
-    const token = await AsyncStorage.getItem("token");
-    const userId = await AsyncStorage.getItem("userId");
+  // const updateEmail = async () => {
+  // try {
+  //   if(updateUser){
+  //     await updateUser({
+  //       email: email,
+  //     })
+  //   }
+  // }
+  // const token = await AsyncStorage.getItem("token");
+  // const userId = await AsyncStorage.getItem("userId");
+  // try {
+  //   const response = await fetch(`${API_URL}/api/editemail`, {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Bearer ${token}`,
+  //     },
+  //     body: JSON.stringify({ userId, email, password }),
+  //   });
+  //   const result = await response.json();
+  //   if (!response.ok) {
+  //     setEmailChangeSuccess("");
+  //     setEmailChangeError(result.error || "Failed to update email");
+  //     return;
+  //   } else {
+  //     setEmailChangeSuccess("Email Successfully Changed");
+  //     setEmailChangeError("");
+  //   }
+  // } catch (error) {
+  //   console.log("Error:", error);
+  //   setEmailChangeSuccess("");
+  //   setEmailChangeError("Internal server error");
+  // }
+  // };
 
-    try {
-      const response = await fetch(`${API_URL}/api/editemail`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId, email, password }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setEmailChangeSuccess("");
-        setEmailChangeError(result.error || "Failed to update email");
-        return;
-      } else {
-        setEmailChangeSuccess("Email Successfully Changed");
-        setEmailChangeError("");
-      }
-    } catch (error) {
-      console.log("Error:", error);
-      setEmailChangeSuccess("");
-      setEmailChangeError("Internal server error");
-    }
-  };
-
-  const changePassword = async () => {
-    const token = await AsyncStorage.getItem("token");
-    const userId = await AsyncStorage.getItem("userId");
-
-    try {
-      const response = await fetch(`${API_URL}/api/changepassword`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          userId,
-          oldPassword,
-          newPassword,
-          confirmNewPassword,
-        }),
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-        setPasswordChangeSuccess("");
-        setPasswordChangeError(result.error || "Failed to update password");
-        return;
-      } else {
-        setPasswordChangeSuccess("Password Successfully Changed");
-        setPasswordChangeError("");
-      }
-    } catch (error) {
-      console.log("Error:", error);
-      setPasswordChangeError("Internal server error");
-    }
-  };
+  // const changePassword = async () => {
+  // const token = await AsyncStorage.getItem("token");
+  // const userId = await AsyncStorage.getItem("userId");
+  // try {
+  //   const response = await fetch(`${API_URL}/api/changepassword`, {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Bearer ${token}`,
+  //     },
+  //     body: JSON.stringify({
+  //       userId,
+  //       oldPassword,
+  //       newPassword,
+  //       confirmNewPassword,
+  //     }),
+  //   });
+  //   const result = await response.json();
+  //   if (!response.ok) {
+  //     setPasswordChangeSuccess("");
+  //     setPasswordChangeError(result.error || "Failed to update password");
+  //     return;
+  //   } else {
+  //     setPasswordChangeSuccess("Password Successfully Changed");
+  //     setPasswordChangeError("");
+  //   }
+  // } catch (error) {
+  //   console.log("Error:", error);
+  //   setPasswordChangeError("Internal server error");
+  // }
+  // };
 
   return (
     <View style={styles.container}>
@@ -165,6 +187,7 @@ export default function Settings() {
             styles.formInput,
             readerTagChangeSuccess ? styles.successInput : null,
           ]}
+          onChangeText={setReaderTag}
         ></TextInput>
         <TouchableOpacity
           style={styles.changeLoginButton}
@@ -175,15 +198,16 @@ export default function Settings() {
         {readerTagChangeSuccess ? (
           <Text style={styles.successText}>{readerTagChangeSuccess}</Text>
         ) : null}
-        <Text style={styles.formLabel}>Change Email</Text>
+        {/* <Text style={styles.formLabel}>Change Email</Text>
         <TextInput
           defaultValue={email}
           style={[
             styles.formInput,
             emailChangeSuccess ? styles.successInput : null,
           ]}
-        ></TextInput>
-        <Text style={styles.formLabel}>Enter Current Password</Text>
+          onChangeText={setEmail}
+        ></TextInput> */}
+        {/* <Text style={styles.formLabel}>Enter Current Password</Text>
         <TextInput
           secureTextEntry={true}
           style={[
@@ -251,7 +275,7 @@ export default function Settings() {
           <Text style={styles.successPasswordText}>
             {passwordChangeSuccess}
           </Text>
-        ) : null}
+        ) : null} */}
         <TouchableOpacity style={styles.buttonLogout} onPress={handleLogout}>
           <Text style={styles.primaryButtonText}>Logout</Text>
         </TouchableOpacity>

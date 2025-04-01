@@ -25,25 +25,25 @@ export default function Index() {
     setSigninError(signinError.trim());
 
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      // const response = await fetch(`${API_URL}/auth/login`, {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({ email, password }),
+      // });
 
-      const result = await response.json();
+      // const result = await response.json();
 
-      if (result.error) setSigninError(result.error);
+      // if (result.error) setSigninError(result.error);
 
-      if (!response.ok) {
-        throw new Error("Failed to sign in");
-      }
+      // if (!response.ok) {
+      //   throw new Error("Failed to sign in");
+      // }
 
-      await AsyncStorage.setItem("token", result.token);
-      await AsyncStorage.setItem("userId", result.userId);
-      await AsyncStorage.setItem("readerTag", result.readerTag);
+      // await AsyncStorage.setItem("token", result.token);
+      // await AsyncStorage.setItem("userId", result.userId);
+      // await AsyncStorage.setItem("readerTag", result.readerTag);
 
       if (signInWithEmailAndPassword) {
         await signInWithEmailAndPassword({

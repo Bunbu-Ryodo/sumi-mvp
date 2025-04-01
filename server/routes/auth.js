@@ -12,7 +12,9 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 router.post("/register", async (req, res) => {
-  const { email, password, confirmPassword, readerTag } = req.body;
+  const { email, password, confirmPassword, readerTag, id } = req.body;
+
+  console.log(id, "ID");
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -40,6 +42,7 @@ router.post("/register", async (req, res) => {
 
     const newUser = await prisma.users.create({
         data: {
+          id,
           email,
           password: hashedPassword,
           readerTag,
@@ -47,9 +50,9 @@ router.post("/register", async (req, res) => {
       });
 
 
-    const token = jwt.sign({ userId: newUser.id }, JWT_SECRET, { expiresIn: "1h" });
+    // const token = jwt.sign({ userId: newUser.id }, JWT_SECRET, { expiresIn: "1h" });
 
-    res.status(201).json({ token, userId: newUser.id, readerTag: newUser.readerTag });
+    res.status(201).json({ userId: newUser.id, readerTag: newUser.readerTag });
 })
 
 router.post("/login", async (req, res) => {
